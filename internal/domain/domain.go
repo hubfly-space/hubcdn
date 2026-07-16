@@ -33,6 +33,7 @@ const (
 type Settings struct {
 	CacheMode      cache.Mode
 	TTL            time.Duration
+	SWR            time.Duration
 	Websocket      bool
 	PreserveHost   bool
 	MaxObjectBytes int64
@@ -44,6 +45,7 @@ func DefaultSettings(maxObject int64) Settings {
 	return Settings{
 		CacheMode:      cache.ModeStandard,
 		TTL:            time.Hour,
+		SWR:            10 * time.Minute,
 		Websocket:      true,
 		PreserveHost:   true,
 		MaxObjectBytes: maxObject,
@@ -55,13 +57,14 @@ func (s Settings) Policy() cache.Policy {
 	return cache.Policy{
 		Mode:           s.CacheMode,
 		DefaultTTL:     s.TTL,
+		StaleFor:       s.SWR,
 		MaxObjectBytes: s.MaxObjectBytes,
 	}
 }
 
 // ParseSettings parses a config TXT value like
 //
-//	"cache=aggressive; ttl=6h; websocket=off; preserve_host=on; max_object=16mb"
+//	"cache=aggressive; ttl=6h; swr=30m; websocket=off; preserve_host=on; max_object=16mb"
 //
 // on top of the given defaults. Unknown keys and malformed values are
 // ignored so a typo can never take a domain down.
@@ -80,6 +83,10 @@ func ParseSettings(raw string, defaults Settings) Settings {
 		case "ttl":
 			if d, ok := parseTTL(val); ok {
 				s.TTL = d
+			}
+		case "swr":
+			if d, ok := parseTTL(val); ok {
+				s.SWR = d
 			}
 		case "websocket":
 			if b, ok := parseSwitch(val); ok {

@@ -17,16 +17,23 @@ func TestParseSettings(t *testing.T) {
 	})
 
 	t.Run("full config", func(t *testing.T) {
-		got := ParseSettings("cache=aggressive; ttl=6h; websocket=off; preserve_host=off; max_object=16mb", defaults)
+		got := ParseSettings("cache=aggressive; ttl=6h; swr=30m; websocket=off; preserve_host=off; max_object=16mb", defaults)
 		want := Settings{
 			CacheMode:      cache.ModeAggressive,
 			TTL:            6 * time.Hour,
+			SWR:            30 * time.Minute,
 			Websocket:      false,
 			PreserveHost:   false,
 			MaxObjectBytes: 16 << 20,
 		}
 		if got != want {
 			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("swr can be disabled", func(t *testing.T) {
+		if got := ParseSettings("swr=0", defaults); got.SWR != 0 {
+			t.Fatalf("swr=0 not honored: %v", got.SWR)
 		}
 	})
 

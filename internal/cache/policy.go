@@ -12,11 +12,16 @@ import (
 // derived from the domain's TXT configuration (see internal/domain).
 type Policy struct {
 	// Mode: ModeOff caches nothing, ModeStandard follows origin headers,
-	// ModeAggressive additionally caches responses that lack caching
-	// headers and ignores cookies on static assets.
+	// ModeAggressive additionally caches responses that lack usable
+	// freshness information and ignores request cookies.
 	Mode Mode
-	// DefaultTTL applies when the origin sends no freshness information.
+	// DefaultTTL applies when the origin sends no usable freshness
+	// information.
 	DefaultTTL time.Duration
+	// StaleFor keeps entries serveable past their TTL: an expired entry is
+	// returned to the client immediately while a background revalidation
+	// fetches a fresh copy, so expiry never blocks a request on the origin.
+	StaleFor time.Duration
 	// MaxObjectBytes caps the body size admitted into the cache.
 	MaxObjectBytes int64
 }
@@ -100,10 +105,14 @@ func (p Policy) CacheableRequest(r *http.Request) bool {
 	if cc.noStore {
 		return false
 	}
-	if r.Header.Get("Cookie") != "" {
-		// Cookies usually mean personalized content; aggressive mode
-		// still caches static assets since those never vary per user.
-		return p.Mode == ModeAggressive && staticExt[strings.ToLower(path.Ext(r.URL.Path))]
+	if r.Header.Get("Cookie") != "" && p.Mode != ModeAggressive {
+		// Cookies usually mean personalized content, so standard mode
+		// bypasses. Aggressive mode caches regardless: real browsers carry
+		// some cookie on nearly every request (analytics, consent), and
+		// bypassing on those would defeat the cache for all real traffic.
+		// The response-side Set-Cookie guard in ResponseTTL still keeps
+		// personalized responses out of the cache.
+		return false
 	}
 	return true
 }
@@ -126,32 +135,41 @@ func (p Policy) ResponseTTL(reqPath string, status int, header http.Header) (tim
 	if cc.noStore || cc.private {
 		return 0, false
 	}
-	if cc.noCache {
-		return 0, false
-	}
-	if cc.sMaxAge >= 0 {
-		return capTTL(time.Duration(cc.sMaxAge) * time.Second), cc.sMaxAge > 0
-	}
-	if cc.maxAge >= 0 {
-		return capTTL(time.Duration(cc.maxAge) * time.Second), cc.maxAge > 0
-	}
-	if exp := header.Get("Expires"); exp != "" {
-		if t, err := http.ParseTime(exp); err == nil {
-			ttl := time.Until(t)
-			if ttl <= 0 {
-				return 0, false
+
+	// Explicit positive freshness from the origin always wins, in any mode.
+	explicit := cc.noCache || cc.maxAge >= 0 || cc.sMaxAge >= 0
+	var ttl time.Duration
+	if !cc.noCache {
+		switch {
+		case cc.sMaxAge >= 0:
+			ttl = time.Duration(cc.sMaxAge) * time.Second
+		case cc.maxAge >= 0:
+			ttl = time.Duration(cc.maxAge) * time.Second
+		default:
+			if exp := header.Get("Expires"); exp != "" {
+				if t, err := http.ParseTime(exp); err == nil {
+					explicit = true
+					ttl = time.Until(t)
+				}
 			}
-			return capTTL(ttl), true
 		}
 	}
+	if ttl > 0 {
+		return capTTL(ttl), true
+	}
 
-	// No explicit freshness from the origin.
+	// No usable freshness: the origin either sent nothing, or sent
+	// no-cache / max-age=0 / an already-expired Expires.
 	switch p.Mode {
 	case ModeAggressive:
+		// Aggressive mode is an explicit owner opt-in to cache shared
+		// content, so zero freshness is overridden by the configured TTL.
+		// no-store, private and Set-Cookie are still always respected.
 		return p.DefaultTTL, p.DefaultTTL > 0
 	default:
-		// Standard mode only applies the heuristic TTL to static assets.
-		if staticExt[strings.ToLower(path.Ext(reqPath))] {
+		// Standard mode respects explicit "don't cache" signals and only
+		// applies the heuristic TTL to silent static assets.
+		if !explicit && staticExt[strings.ToLower(path.Ext(reqPath))] {
 			return p.DefaultTTL, p.DefaultTTL > 0
 		}
 		return 0, false
