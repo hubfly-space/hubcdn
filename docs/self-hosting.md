@@ -50,6 +50,7 @@ suffixes; durations use Go syntax (`30s`, `5m`, `6h`).
 | `HUBCDN_ACME_EMAIL` | — | ACME account email (expiry notices) |
 | `HUBCDN_ACME_STAGING` | `false` | Use Let's Encrypt staging |
 | `HUBCDN_ACME_CA` | LE production | Custom ACME directory URL |
+| `HUBCDN_ACME_DEBUG` | `false` | Verbose certmagic/acmez logging — order creation, challenge setup, authorization polling. Turn on when an issuance is stuck or failing without a logged reason |
 | `HUBCDN_CERTS_PER_APEX_PER_DAY` | `10` | Issuance budget — see [ssl.md](ssl.md) |
 | `HUBCDN_CERTS_PER_APEX_PER_WEEK` | `30` | |
 | `HUBCDN_CERTS_GLOBAL_PER_HOUR` | `60` | |

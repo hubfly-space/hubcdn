@@ -15,11 +15,14 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/caddyserver/certmagic"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/hubcdn/hubcdn/internal/cache"
 	"github.com/hubcdn/hubcdn/internal/certguard"
@@ -103,13 +106,28 @@ func (s *Server) setupTLS() error {
 		},
 	})
 
-	s.magic = certmagic.New(certCache, certmagic.Config{
+	magicCfg := certmagic.Config{
 		Storage: storage,
 		OnDemand: &certmagic.OnDemandConfig{
 			DecisionFunc: s.decideIssuance,
 		},
 		OnEvent: s.onCertEvent,
-	})
+	}
+	if s.cfg.ACMEDebug {
+		// certmagic's default logger runs at Info level, which silently
+		// drops most of the detail acmez logs while placing an ACME order
+		// (challenge setup, authorization polling) — and some failure
+		// paths in acmez only log at Error for structured ACME "problem"
+		// responses, so a plain network/timeout error can propagate all
+		// the way up without ever being logged. Debug level surfaces all
+		// of it.
+		magicCfg.Logger = zap.New(zapcore.NewCore(
+			zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig()),
+			zapcore.AddSync(os.Stderr),
+			zap.DebugLevel,
+		))
+	}
+	s.magic = certmagic.New(certCache, magicCfg)
 
 	ca := s.cfg.ACMECA
 	if ca == "" {
@@ -138,42 +156,58 @@ func (s *Server) setupTLS() error {
 func (s *Server) decideIssuance(ctx context.Context, name string) error {
 	name = strings.ToLower(name)
 	if !dnsx.ValidHost(name) {
-		return fmt.Errorf("refusing certificate for invalid host %q", name)
+		err := fmt.Errorf("refusing certificate for invalid host %q", name)
+		s.log.Warn("certificate refused: invalid host", "host", name, "err", err)
+		return err
 	}
 	if len(s.cfg.PublicIPs) > 0 {
 		ok, err := s.resolver.PointsTo(ctx, name, s.cfg.PublicIPs)
 		if err != nil {
-			return fmt.Errorf("verifying %s points here: %w", name, err)
+			err = fmt.Errorf("verifying %s points here: %w", name, err)
+			s.log.Warn("certificate refused: points-at-us check errored", "host", name, "public_ips", s.cfg.PublicIPs, "err", err)
+			return err
 		}
 		if !ok {
-			return fmt.Errorf("%s does not resolve to this node", name)
+			err := fmt.Errorf("%s does not resolve to this node", name)
+			s.log.Warn("certificate refused: host does not resolve to this node", "host", name, "public_ips", s.cfg.PublicIPs, "err", err)
+			return err
 		}
 	}
 	if err := s.guard.Check(dnsx.Apex(name)); err != nil {
 		s.log.Warn("certificate refused by guard", "host", name, "err", err)
 		return err
 	}
+	s.log.Info("certificate issuance approved, requesting from CA", "host", name)
 	return nil
 }
 
-// onCertEvent records successful new issuances against the guard's budgets.
-// Renewals are exempt: they replace an existing certificate and must never
-// be starved by a noisy apex.
+// onCertEvent records successful new issuances against the guard's budgets
+// and surfaces failures. certmagic's own failure log fires only when the
+// obtain attempt returns an error; hooking cert_failed here means the reason
+// is always visible in hubCDN's log at the same level as everything else.
+// Renewals are exempt from the guard: they replace an existing certificate
+// and must never be starved by a noisy apex.
 func (s *Server) onCertEvent(_ context.Context, event string, data map[string]any) error {
-	if event != "cert_obtained" {
-		return nil
+	switch event {
+	case "cert_obtained":
+		renewal, _ := data["renewal"].(bool)
+		if renewal {
+			return nil
+		}
+		name, _ := data["identifier"].(string)
+		if name == "" {
+			return nil
+		}
+		apex := dnsx.Apex(name)
+		s.guard.Record(apex)
+		s.log.Info("certificate issued", "host", name, "apex", apex)
+	case "cert_failed":
+		name, _ := data["identifier"].(string)
+		s.log.Error("certificate issuance failed",
+			"host", name,
+			"issuers", data["issuers"],
+			"err", data["error"])
 	}
-	renewal, _ := data["renewal"].(bool)
-	if renewal {
-		return nil
-	}
-	name, _ := data["identifier"].(string)
-	if name == "" {
-		return nil
-	}
-	apex := dnsx.Apex(name)
-	s.guard.Record(apex)
-	s.log.Info("certificate issued", "host", name, "apex", apex)
 	return nil
 }
 

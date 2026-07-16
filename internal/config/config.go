@@ -35,6 +35,11 @@ type Config struct {
 	// production; set ACMEStaging for the staging directory instead.
 	ACMECA      string
 	ACMEStaging bool
+	// ACMEDebug enables debug-level logging from certmagic/acmez: full
+	// detail on every step of certificate issuance (order creation,
+	// challenge setup, authorization polling). Off by default because it's
+	// noisy; turn it on when diagnosing a stuck or silently failing order.
+	ACMEDebug bool
 
 	// PublicIPs are the addresses this node is reachable on. When set, a
 	// certificate is only issued for a domain whose A/AAAA records point
@@ -84,6 +89,7 @@ func Load() (*Config, error) {
 		ACMEEmail:              envStr("HUBCDN_ACME_EMAIL", ""),
 		ACMECA:                 envStr("HUBCDN_ACME_CA", ""),
 		ACMEStaging:            envBool("HUBCDN_ACME_STAGING", false),
+		ACMEDebug:              envBool("HUBCDN_ACME_DEBUG", false),
 		Resolver:               envStr("HUBCDN_RESOLVER", ""),
 		RefreshInterval:        envDuration("HUBCDN_REFRESH_INTERVAL", 5*time.Minute),
 		PendingRefreshInterval: envDuration("HUBCDN_PENDING_REFRESH_INTERVAL", 30*time.Second),
