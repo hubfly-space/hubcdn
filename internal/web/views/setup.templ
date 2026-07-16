@@ -19,11 +19,14 @@ templ Setup(host, originRecord, configRecord string) {
 			(<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>)
 			or a bare hostname, which defaults to HTTPS.
 		</p>
-		<p class="muted">
-			This page checks for the record automatically and refreshes every
-			15&nbsp;seconds. As soon as the record propagates, your site is served
-			from here — cached, compressed and TLS-terminated.
-		</p>
+		<div class="notice">
+			<strong>Give it a few minutes.</strong> DNS changes aren't instant —
+			most providers apply a new TXT record within a few minutes, though it
+			can occasionally take longer depending on your provider and the
+			record's TTL. There's nothing else to do here: this page checks
+			automatically every 15&nbsp;seconds and refreshes itself, so just
+			leave it open, or come back and reload shortly.
+		</div>
 		<h2>Optional: caching &amp; behavior</h2>
 		<p>Tune this domain with a second TXT record:</p>
 		<pre class="record">{ configRecord }    TXT    <b>"cache=aggressive; ttl=6h"</b></pre>
@@ -40,6 +43,10 @@ templ SetupError(host, originRecord, lastError string) {
 		<pre class="record">{ originRecord }    TXT    <b>"https://origin.your-server.com"</b></pre>
 		<p>Last error:</p>
 		<pre class="record">{ lastError }</pre>
-		<p class="muted">hubCDN keeps retrying automatically; this page refreshes on its own.</p>
+		<div class="notice">
+			If you just changed this record, this may just be DNS propagation —
+			it isn't always instant. hubCDN keeps retrying automatically, and
+			this page refreshes on its own, so no action is needed yet.
+		</div>
 	}
 }

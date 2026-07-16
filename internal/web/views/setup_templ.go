@@ -70,14 +70,14 @@ func Setup(host, originRecord, configRecord string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " TXT    <b>\"https://origin.your-server.com\"</b></pre><p>Replace the value with the address of your actual server — a full URL (<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>) or a bare hostname, which defaults to HTTPS.</p><p class=\"muted\">This page checks for the record automatically and refreshes every 15&nbsp;seconds. As soon as the record propagates, your site is served from here — cached, compressed and TLS-terminated.</p><h2>Optional: caching &amp; behavior</h2><p>Tune this domain with a second TXT record:</p><pre class=\"record\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " TXT    <b>\"https://origin.your-server.com\"</b></pre><p>Replace the value with the address of your actual server — a full URL (<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>) or a bare hostname, which defaults to HTTPS.</p><div class=\"notice\"><strong>Give it a few minutes.</strong> DNS changes aren't instant — most providers apply a new TXT record within a few minutes, though it can occasionally take longer depending on your provider and the record's TTL. There's nothing else to do here: this page checks automatically every 15&nbsp;seconds and refreshes itself, so just leave it open, or come back and reload shortly.</div><h2>Optional: caching &amp; behavior</h2><p>Tune this domain with a second TXT record:</p><pre class=\"record\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(configRecord)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 29, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 32, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -142,7 +142,7 @@ func SetupError(host, originRecord, lastError string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(host)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 38, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 41, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func SetupError(host, originRecord, lastError string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(originRecord)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 40, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 43, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -168,13 +168,13 @@ func SetupError(host, originRecord, lastError string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(lastError)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 42, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/setup.templ`, Line: 45, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</pre><p class=\"muted\">hubCDN keeps retrying automatically; this page refreshes on its own.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</pre><div class=\"notice\">If you just changed this record, this may just be DNS propagation — it isn't always instant. hubCDN keeps retrying automatically, and this page refreshes on its own, so no action is needed yet.</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

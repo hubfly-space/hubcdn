@@ -70,6 +70,16 @@ templ layout(title string, refresh bool) {
 					margin-bottom: 1rem;
 				}
 				.muted { color: var(--muted); font-size: 0.9rem; }
+				.notice {
+					background: #fff;
+					border: 1px solid var(--line);
+					border-left: 3px solid var(--accent);
+					border-radius: 6px;
+					padding: 0.85rem 1.1rem;
+					margin: 1rem 0;
+					font-size: 0.9rem;
+				}
+				.notice strong { color: var(--accent); }
 				footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 				footer p { color: var(--muted); font-size: 0.85rem; }
 				a { color: var(--accent); }
