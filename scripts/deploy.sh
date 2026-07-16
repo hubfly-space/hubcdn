@@ -123,12 +123,21 @@ fi
 # Read the port actually in effect (the existing .env wins over the
 # freshly computed default above), and fail before wasting a build if
 # something else on this host already holds it.
+#
+# "Something else" specifically excludes our own prior deployment: if this
+# compose project already has a container (from a previous `make deploy`),
+# `docker compose up -d` below stops and replaces it as part of its normal
+# recreate flow, freeing and rebinding the port atomically. Checking the
+# port in that case would flag our own soon-to-be-replaced container as a
+# conflict on every single redeploy. Only a genuinely first-time deploy
+# (no existing container for this project yet) needs the early check.
 port_from_env() {
 	awk -F= -v k="$1" -v d="$2" '$1==k{v=$2} END{print (v=="" ? d : v)}' .env
 }
 effective_https=$(port_from_env HUBCDN_HOST_HTTPS_PORT "$HTTPS_PORT")
 
-if command -v ss >/dev/null 2>&1; then
+existing_container="$(docker compose ps -q 2>/dev/null || true)"
+if [ -z "$existing_container" ] && command -v ss >/dev/null 2>&1; then
 	if ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "[.:]${effective_https}\$"; then
 		echo "error: port ${effective_https} is already in use on this host by another process." >&2
 		echo "  see what's using it (on this host, sudo shows the process): ss -ltnp | grep :${effective_https}" >&2
