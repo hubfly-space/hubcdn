@@ -97,6 +97,28 @@ func TestInvalidOptionsRejected(t *testing.T) {
 	}
 }
 
+// TestProductionClientRejectsPrivateHosts exercises the real, guarded
+// client (New with a nil client, as production wiring uses) against a
+// literal private-IP source. Confirms the explicit pre-flight check in
+// fetch() rejects it immediately — this is the check CodeQL's
+// go/request-forgery query flags at the h.client.Do call site, so this
+// test is the evidence that the flagged sink is unreachable with a
+// non-public destination in the production configuration.
+func TestProductionClientRejectsPrivateHosts(t *testing.T) {
+	h := New(cache.New(1<<20), slog.New(slog.DiscardHandler), nil, nil)
+	for _, host := range []string{"127.0.0.1", "10.0.0.5", "169.254.169.254", "192.168.1.1"} {
+		r := httptest.NewRequest(http.MethodGet, "https://cdn.example/img/_/http://"+host+"/x.png", nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("source %s: want 400, got %d: %s", host, w.Code, w.Body.String())
+		}
+		if !bytes.Contains(w.Body.Bytes(), []byte("not publicly routable")) {
+			t.Errorf("source %s: unexpected rejection reason: %s", host, w.Body.String())
+		}
+	}
+}
+
 func TestSelfHostRejected(t *testing.T) {
 	h := New(cache.New(1<<20), slog.New(slog.DiscardHandler),
 		func(host string) bool { return host == "cdn.example" }, http.DefaultClient)

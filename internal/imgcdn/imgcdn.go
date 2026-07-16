@@ -59,6 +59,11 @@ type Handler struct {
 	// selfHost reports whether a hostname refers to this node, to refuse
 	// recursive /img/ chains through ourselves.
 	selfHost func(host string) bool
+	// guarded is true when client is the SSRF-guarded client New built
+	// itself (the production path). Tests inject their own client (usually
+	// http.DefaultClient) to reach loopback httptest servers, which the
+	// production pre-flight host check would otherwise reject outright.
+	guarded bool
 
 	sf  singleflight.Group
 	sem chan struct{}
@@ -67,6 +72,7 @@ type Handler struct {
 // New builds the handler. client may be nil, in which case an SSRF-guarded
 // client (public IPs only) is used — pass a custom client only in tests.
 func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *http.Client) *Handler {
+	guarded := client == nil
 	if client == nil {
 		client = newSafeClient(selfHost)
 	}
@@ -75,6 +81,7 @@ func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *h
 		log:      log,
 		client:   client,
 		selfHost: selfHost,
+		guarded:  guarded,
 		sem:      make(chan struct{}, max(2, runtime.GOMAXPROCS(0))),
 	}
 }
@@ -176,6 +183,19 @@ func (h *Handler) optimize(ctx context.Context, key string, src *url.URL, params
 }
 
 func (h *Handler) fetch(ctx context.Context, src *url.URL) ([]byte, error) {
+	// Explicit pre-flight check, in addition to the equivalent check inside
+	// newSafeClient's DialContext: that one guards every connection this
+	// client ever makes (including redirect hops, resolved fresh each
+	// time), which is what actually closes off DNS-rebinding — a hostname
+	// that resolves to a public IP right now could resolve to a private
+	// one by the time the connection opens. This check here rejects the
+	// common case immediately, before ever constructing a request for it.
+	if h.guarded {
+		if err := requirePublicHost(ctx, src.Hostname()); err != nil {
+			return nil, &httpError{http.StatusBadRequest, "source host is not publicly routable: " + err.Error()}
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, src.String(), nil)
 	if err != nil {
 		return nil, &httpError{http.StatusBadRequest, "invalid source URL"}
@@ -277,14 +297,9 @@ func newSafeClient(selfHost func(string) bool) *http.Client {
 			if err != nil {
 				return nil, err
 			}
-			ips, err := net.DefaultResolver.LookupIP(ctx, "ip", host)
+			ips, err := resolvePublicIPs(ctx, host)
 			if err != nil {
 				return nil, err
-			}
-			for _, ip := range ips {
-				if !isPublicIP(ip) {
-					return nil, fmt.Errorf("source resolves to non-public address %s", ip)
-				}
 			}
 			return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
 		},
@@ -305,6 +320,32 @@ func newSafeClient(selfHost func(string) bool) *http.Client {
 			return nil
 		},
 	}
+}
+
+// requirePublicHost resolves host and rejects it unless every address it
+// resolves to is publicly routable. Used as an explicit gate right before
+// the source fetch, on top of the equivalent (and authoritative — see
+// newSafeClient) check performed again at actual connection time.
+func requirePublicHost(ctx context.Context, host string) error {
+	_, err := resolvePublicIPs(ctx, host)
+	return err
+}
+
+// resolvePublicIPs resolves host and returns its addresses, failing if any
+// of them is not a publicly routable unicast address — loopback, RFC 1918,
+// link-local (including the cloud metadata address), CGNAT and multicast
+// ranges are all refused.
+func resolvePublicIPs(ctx context.Context, host string) ([]net.IP, error) {
+	ips, err := net.DefaultResolver.LookupIP(ctx, "ip", host)
+	if err != nil {
+		return nil, err
+	}
+	for _, ip := range ips {
+		if !isPublicIP(ip) {
+			return nil, fmt.Errorf("%s resolves to non-public address %s", host, ip)
+		}
+	}
+	return ips, nil
 }
 
 // isPublicIP reports whether ip is a publicly routable unicast address.
