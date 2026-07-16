@@ -1,0 +1,66 @@
+package views
+
+// Landing is served on the node's own hostname (or bare IP): how to put a
+// domain behind this hubCDN deployment.
+templ Landing(hostname string, ips []string) {
+	@layout("hubCDN — self-hosted CDN", false) {
+		<div class="badge">hubCDN node</div>
+		<h1>Put your domain behind <span>hubCDN</span></h1>
+		<p class="lead">No signup, no dashboard. Everything is configured with two DNS records.</p>
+		<ol class="steps">
+			<li>
+				<strong>Point your domain at this node</strong>
+				if hostname != "" {
+					<p>Add a CNAME (or ALIAS at the apex) to:</p>
+					<pre class="record">www.your-domain.com    CNAME    <b>{ hostname }</b></pre>
+				}
+				if len(ips) > 0 {
+					<p>
+						if hostname != "" {
+							Or point A/AAAA records directly at:
+						} else {
+							Add A/AAAA records pointing at:
+						}
+					</p>
+					<pre class="record">
+						for _, ip := range ips {
+							your-domain.com    A/AAAA    <b>{ ip }</b>
+							{ "\n" }
+						}
+					</pre>
+				}
+			</li>
+			<li>
+				<strong>Open your domain in a browser</strong>
+				<p>
+					Once DNS propagates, hubCDN issues a TLS certificate for your domain
+					automatically and shows a setup page with your next step.
+				</p>
+			</li>
+			<li>
+				<strong>Declare your origin in a TXT record</strong>
+				<p>Tell hubCDN where your actual server lives:</p>
+				<pre class="record">hubcdn.v1.origin.your-domain.com    TXT    <b>"https://origin.your-server.com"</b></pre>
+				<p>
+					That's it. Traffic now flows through this node with caching and
+					automatic certificate renewal.
+				</p>
+			</li>
+		</ol>
+		<h2>Optional: tune caching with one more TXT record</h2>
+		<pre class="record">hubcdn.v1.config.your-domain.com    TXT    <b>"cache=aggressive; ttl=6h; websocket=on"</b></pre>
+		@configReference()
+	}
+}
+
+templ configReference() {
+	<table>
+		<tr><th>Key</th><th>Values</th><th>Default</th></tr>
+		<tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr>
+		<tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr>
+		<tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr>
+		<tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr>
+		<tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr>
+	</table>
+	<p class="muted">Changes are picked up automatically on the next refresh cycle.</p>
+}
