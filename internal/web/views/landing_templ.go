@@ -8,8 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// Landing is served on the node's own hostname (or bare IP): how to put a
-// domain behind this hubCDN deployment.
+// Landing is served on the node's own hostname (or bare IP). Two modes
+// share the page through a pure-CSS tab toggle: the Site CDN onboarding
+// instructions, and the Image CDN (direct caching, no DNS) reference with a
+// live URL builder. Switching tabs re-themes the page background.
 func Landing(hostname string, ips []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -43,101 +45,171 @@ func Landing(hostname string, ips []string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"badge\">hubCDN node</div><h1>Put your domain behind <span>hubCDN</span></h1><p class=\"lead\">No signup, no dashboard. Everything is configured with two DNS records.</p><ol class=\"steps\"><li><strong>Point your domain at this node</strong> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<input class=\"tab-input\" type=\"radio\" name=\"mode\" id=\"tab-site\" checked> <input class=\"tab-input\" type=\"radio\" name=\"mode\" id=\"tab-img\"><div class=\"tabs\"><label for=\"tab-site\">Site CDN</label> <label for=\"tab-img\">Image CDN</label></div><section class=\"pane pane-site\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if hostname != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p>Add a CNAME (or ALIAS at the apex) to:</p><pre class=\"record\">www.your-domain.com    CNAME    <b>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hostname)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 15, Col: 70}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</b></pre>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			if len(ips) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				if hostname != "" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Or point A/AAAA records directly at:")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "Add A/AAAA records pointing at:")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p><pre class=\"record\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				for _, ip := range ips {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "your-domain.com    A/AAAA    <b>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var4 string
-					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(ip)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 27, Col: 43}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</b> ")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var5 string
-					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("\n")
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 28, Col: 13}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</pre>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</li><li><strong>Open your domain in a browser</strong><p>Once DNS propagates, hubCDN issues a TLS certificate for your domain automatically and shows a setup page with your next step.</p></li><li><strong>Declare your origin in a TXT record</strong><p>Tell hubCDN where your actual server lives:</p><pre class=\"record\">hubcdn.v1.origin.your-domain.com    TXT    <b>\"https://origin.your-server.com\"</b></pre><p>That's it. Traffic now flows through this node with caching and automatic certificate renewal.</p></li></ol><h2>Optional: tune caching with one more TXT record</h2><pre class=\"record\">hubcdn.v1.config.your-domain.com    TXT    <b>\"cache=aggressive; ttl=6h; websocket=on\"</b></pre>")
+			templ_7745c5c3_Err = sitePane(hostname, ips).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = configReference().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</section><section class=\"pane pane-img\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " ")
+			templ_7745c5c3_Err = imagePane().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = resultsSection().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
 		templ_7745c5c3_Err = layout("hubCDN — self-hosted CDN", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func sitePane(hostname string, ips []string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"badge\">hubCDN node</div><h1>Put your domain behind <span>hubCDN</span></h1><p class=\"lead\">No signup, no dashboard. Everything is configured with two DNS records.</p><ol class=\"steps\"><li><strong>Point your domain at this node</strong> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if hostname != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p>Add a CNAME (or ALIAS at the apex) to:</p><pre class=\"record\">www.your-domain.com    CNAME    <b>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hostname)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 33, Col: 69}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</b></pre>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if len(ips) > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if hostname != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "Or point A/AAAA records directly at:")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Add A/AAAA records pointing at:")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p><pre class=\"record\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, ip := range ips {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "your-domain.com    A/AAAA    <b>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(ip)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 45, Col: 42}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</b> ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("\n")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 46, Col: 12}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</li><li><strong>Open your domain in a browser</strong><p>Once DNS propagates, hubCDN issues a TLS certificate for your domain automatically and shows a setup page with your next step.</p></li><li><strong>Declare your origin in a TXT record</strong><p>Tell hubCDN where your actual server lives:</p><pre class=\"record\">hubcdn.v1.origin.your-domain.com    TXT    <b>\"https://origin.your-server.com\"</b></pre><p>That's it. Traffic now flows through this node with caching and automatic certificate renewal.</p></li></ol><h2>Optional: tune caching with one more TXT record</h2><pre class=\"record\">hubcdn.v1.config.your-domain.com    TXT    <b>\"cache=aggressive; ttl=6h; websocket=on\"</b></pre>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = configReference().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = resultsSection().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func imagePane() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"badge\">direct caching — no DNS needed</div><h1>Optimize any image through <span>hubCDN</span></h1><p class=\"lead\">Wrap any public image URL and get back a compressed, resized, edge-cached copy. No DNS changes, no signup — just a URL.</p><h2>URL format</h2><pre class=\"record\">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre><pre class=\"record\">/img/<b>w=800,q=75,f=jpeg</b>/https://your-site.com/photo.jpg</pre><p>Options are comma-separated <code>key=value</code> pairs. A single <code>_</code> applies the defaults: re-encode at quality 80 with metadata stripped.</p><h2>Try it</h2><div class=\"builder\"><label for=\"b-src\">Image URL</label> <input type=\"text\" id=\"b-src\" placeholder=\"https://your-site.com/photo.jpg\" autocomplete=\"off\"><div class=\"row\"><div><label for=\"b-w\">Width (px)</label> <input type=\"number\" id=\"b-w\" min=\"1\" max=\"4096\" placeholder=\"auto\"></div><div><label for=\"b-q\">Quality (1–100)</label> <input type=\"number\" id=\"b-q\" min=\"1\" max=\"100\" placeholder=\"80\"></div><div><label for=\"b-f\">Format</label> <select id=\"b-f\"><option value=\"\">auto</option> <option value=\"jpeg\">jpeg</option> <option value=\"png\">png</option> <option value=\"gif\">gif</option></select></div></div><div class=\"out\" id=\"b-out\">Your optimized URL appears here.</div><img class=\"preview\" id=\"b-prev\" alt=\"optimized preview\" loading=\"lazy\"></div><script>\n\t\t(function () {\n\t\t\tvar src = document.getElementById('b-src');\n\t\t\tvar wIn = document.getElementById('b-w');\n\t\t\tvar qIn = document.getElementById('b-q');\n\t\t\tvar fIn = document.getElementById('b-f');\n\t\t\tvar out = document.getElementById('b-out');\n\t\t\tvar prev = document.getElementById('b-prev');\n\t\t\tfunction build() {\n\t\t\t\tvar u = src.value.trim();\n\t\t\t\tif (!u) {\n\t\t\t\t\tout.textContent = 'Your optimized URL appears here.';\n\t\t\t\t\tprev.style.display = 'none';\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar opts = [];\n\t\t\t\tif (wIn.value) opts.push('w=' + wIn.value);\n\t\t\t\tif (qIn.value) opts.push('q=' + qIn.value);\n\t\t\t\tif (fIn.value) opts.push('f=' + fIn.value);\n\t\t\t\tvar full = location.origin + '/img/' + (opts.length ? opts.join(',') : '_') + '/' + u;\n\t\t\t\tout.textContent = full;\n\t\t\t\tprev.src = full;\n\t\t\t\tprev.style.display = 'block';\n\t\t\t}\n\t\t\t[src, wIn, qIn, fIn].forEach(function (el) {\n\t\t\t\tel.addEventListener('input', build);\n\t\t\t\tel.addEventListener('change', build);\n\t\t\t});\n\t\t})();\n\t</script><h2>All options</h2><table><tr><th>Key</th><th>Values</th><th>Effect</th></tr><tr><td><code>w</code>, <code>h</code></td><td>1–4096</td><td>Resize; one dimension keeps aspect ratio</td></tr><tr><td><code>fit</code></td><td><code>scaledown</code> · <code>contain</code> · <code>cover</code> · <code>fill</code></td><td>How the image maps into w×h (<code>cover</code> center-crops)</td></tr><tr><td><code>dpr</code></td><td>0.5–3</td><td>Device pixel ratio multiplier for w/h</td></tr><tr><td><code>q</code></td><td>1–100</td><td>JPEG quality (default 80)</td></tr><tr><td><code>f</code></td><td><code>auto</code> · <code>jpeg</code> · <code>png</code> · <code>gif</code></td><td>Output format; <code>auto</code> keeps transparency in PNG</td></tr><tr><td><code>gray</code></td><td><code>on</code></td><td>Grayscale</td></tr><tr><td><code>blur</code></td><td>1–50</td><td>Blur radius</td></tr><tr><td><code>flip</code></td><td><code>h</code> · <code>v</code> · <code>hv</code></td><td>Mirror horizontally / vertically</td></tr><tr><td><code>_</code></td><td>—</td><td>No options: just compress &amp; strip metadata</td></tr></table><div class=\"notice\"><strong>Retention:</strong> optimized images stay cached for up to 7&nbsp;days. When the node fills up, the least-recently-used images are purged automatically and simply re-optimized on their next request — so hotlinking these URLs is always safe. Animated GIFs are passed through untouched.</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -161,12 +233,12 @@ func resultsSection() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var6 == nil {
-			templ_7745c5c3_Var6 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"results\"><p class=\"results-title\">Results: <b>dummy-web.uhost.pro</b> is faster</p><table><tr><th>Metric</th><th>dummy-web.uhost.pro</th><th>origin-dummy-web.uhost.pro</th></tr><tr><td>Avg. first byte (TTFB)</td><td><strong>0.595s</strong></td><td>1.153s</td></tr><tr><td>Avg. total time</td><td><strong>0.702s</strong></td><td>1.153s</td></tr><tr><td>Response size</td><td>12,881 bytes</td><td>12,881 bytes</td></tr></table><p class=\"muted\"><b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to first byte than the origin — served from hubCDN's edge cache instead of round-tripping across continents on every request.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"results\"><p class=\"results-title\">Results: <b>dummy-web.uhost.pro</b> is faster</p><table><tr><th>Metric</th><th>dummy-web.uhost.pro</th><th>origin-dummy-web.uhost.pro</th></tr><tr><td>Avg. first byte (TTFB)</td><td><strong>0.595s</strong></td><td>1.153s</td></tr><tr><td>Avg. total time</td><td><strong>0.702s</strong></td><td>1.153s</td></tr><tr><td>Response size</td><td>12,881 bytes</td><td>12,881 bytes</td></tr></table><p class=\"muted\"><b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to first byte than the origin — served from hubCDN's edge cache instead of round-tripping across continents on every request.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -190,12 +262,12 @@ func configReference() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

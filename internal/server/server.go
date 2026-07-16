@@ -29,6 +29,7 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/config"
 	"github.com/hubfly-space/hubcdn/internal/dnsx"
 	"github.com/hubfly-space/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/imgcdn"
 	"github.com/hubfly-space/hubcdn/internal/proxy"
 	"github.com/hubfly-space/hubcdn/internal/web"
 )
@@ -42,6 +43,7 @@ type Server struct {
 	guard    *certguard.Guard
 	cache    *cache.Cache
 	proxy    *proxy.Proxy
+	images   *imgcdn.Handler
 	magic    *certmagic.Config
 	started  time.Time
 }
@@ -90,10 +92,27 @@ func New(cfg *config.Config, log *slog.Logger) (*Server, error) {
 		proxy:    proxy.New(objCache, log),
 		started:  time.Now(),
 	}
+	s.images = imgcdn.New(objCache, log, s.isSelfHost, nil)
 	if err := s.setupTLS(); err != nil {
 		return nil, err
 	}
 	return s, nil
+}
+
+// isSelfHost reports whether host names this node, so the image endpoint
+// can refuse recursive fetches through itself.
+func (s *Server) isSelfHost(host string) bool {
+	if host == s.cfg.Hostname && host != "" {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		for _, own := range s.cfg.PublicIPs {
+			if ip.Equal(own) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // setupTLS configures certmagic for on-demand issuance gated by the guard.
@@ -299,6 +318,10 @@ func (s *Server) route(w http.ResponseWriter, r *http.Request) {
 
 // serveNode handles requests addressed to the node itself.
 func (s *Server) serveNode(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, imgcdn.PathPrefix) {
+		s.images.ServeHTTP(w, r)
+		return
+	}
 	switch r.URL.Path {
 	case "/", "/index.html":
 		web.RenderLanding(w, s.cfg.Hostname, s.cfg.PublicIPs)
