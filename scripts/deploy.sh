@@ -27,7 +27,6 @@ HUBCDN_ACME_EMAIL="${HUBCDN_ACME_EMAIL:-$DEFAULT_ACME_EMAIL}"
 HUBCDN_PUBLIC_IPS="${HUBCDN_PUBLIC_IPS:-$DEFAULT_PUBLIC_IPS}"
 HUBCDN_HOSTNAME="${HUBCDN_HOSTNAME:-$DEFAULT_HOSTNAME}"
 HUBCDN_ACME_STAGING="${HUBCDN_ACME_STAGING:-false}"
-HUBCDN_HTTP_PORT="${HUBCDN_HTTP_PORT:-8080}"
 HUBCDN_HTTPS_PORT="${HUBCDN_HTTPS_PORT:-4403}"
 
 # Every ssh/rsync call below shares one authenticated connection, so a
@@ -102,9 +101,9 @@ echo "==> Ensuring remote .env and starting the stack"
 # shellcheck disable=SC2087
 $SSH_CMD "${DEPLOY_HOST}" bash -s -- \
 	"${DEPLOY_DIR}" "${HUBCDN_ACME_EMAIL}" "${HUBCDN_PUBLIC_IPS}" "${HUBCDN_HOSTNAME}" \
-	"${HUBCDN_ACME_STAGING}" "${HUBCDN_HTTP_PORT}" "${HUBCDN_HTTPS_PORT}" <<'REMOTE'
+	"${HUBCDN_ACME_STAGING}" "${HUBCDN_HTTPS_PORT}" <<'REMOTE'
 set -euo pipefail
-DIR="$1"; EMAIL="$2"; IPS="$3"; HOSTNAME_="$4"; STAGING="$5"; HTTP_PORT="$6"; HTTPS_PORT="$7"
+DIR="$1"; EMAIL="$2"; IPS="$3"; HOSTNAME_="$4"; STAGING="$5"; HTTPS_PORT="$6"
 cd "$DIR"
 
 if [ ! -f .env ]; then
@@ -113,9 +112,7 @@ HUBCDN_ACME_EMAIL=${EMAIL}
 HUBCDN_PUBLIC_IPS=${IPS}
 HUBCDN_HOSTNAME=${HOSTNAME_}
 HUBCDN_ACME_STAGING=${STAGING}
-HUBCDN_HTTP_PORT=${HTTP_PORT}
 HUBCDN_HTTPS_PORT=${HTTPS_PORT}
-HUBCDN_HOST_HTTP_PORT=${HTTP_PORT}
 HUBCDN_HOST_HTTPS_PORT=${HTTPS_PORT}
 EOF
 	echo "created .env with default hubCDN production values"
@@ -123,24 +120,21 @@ else
 	echo ".env already present on remote, leaving it untouched"
 fi
 
-# Read the ports actually in effect (the existing .env wins over the
-# freshly computed defaults above), and fail before wasting a build if
-# something else on this host already holds one of them.
+# Read the port actually in effect (the existing .env wins over the
+# freshly computed default above), and fail before wasting a build if
+# something else on this host already holds it.
 port_from_env() {
 	awk -F= -v k="$1" -v d="$2" '$1==k{v=$2} END{print (v=="" ? d : v)}' .env
 }
-effective_http=$(port_from_env HUBCDN_HOST_HTTP_PORT "$HTTP_PORT")
 effective_https=$(port_from_env HUBCDN_HOST_HTTPS_PORT "$HTTPS_PORT")
 
 if command -v ss >/dev/null 2>&1; then
-	for p in "$effective_http" "$effective_https"; do
-		if ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "[.:]${p}\$"; then
-			echo "error: port ${p} is already in use on this host by another process." >&2
-			echo "  see what's using it (on this host, sudo shows the process): ss -ltnp | grep :${p}" >&2
-			echo "  or edit HUBCDN_HOST_HTTP_PORT / HUBCDN_HOST_HTTPS_PORT in ${DIR}/.env and rerun." >&2
-			exit 1
-		fi
-	done
+	if ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "[.:]${effective_https}\$"; then
+		echo "error: port ${effective_https} is already in use on this host by another process." >&2
+		echo "  see what's using it (on this host, sudo shows the process): ss -ltnp | grep :${effective_https}" >&2
+		echo "  or edit HUBCDN_HOST_HTTPS_PORT in ${DIR}/.env and rerun." >&2
+		exit 1
+	fi
 fi
 
 docker compose build

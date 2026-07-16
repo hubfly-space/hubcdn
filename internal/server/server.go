@@ -1,6 +1,9 @@
-// Package server wires every hubCDN component into two listeners: an HTTPS
-// server carrying all real traffic with on-demand certificates, and an HTTP
-// server that answers ACME challenges and redirects everything else.
+// Package server wires every hubCDN component into a single HTTPS listener.
+// Every domain hubCDN serves — including its own landing page — is TLS
+// only; there is no plaintext HTTP anywhere. Certificates are issued
+// on-demand via the TLS-ALPN-01 ACME challenge, which is validated entirely
+// within the TLS handshake on the HTTPS port itself, so no separate HTTP
+// port is ever needed.
 package server
 
 import (
@@ -27,7 +30,7 @@ import (
 	"github.com/hubcdn/hubcdn/internal/web"
 )
 
-// Server owns the two listeners and all shared components.
+// Server owns the HTTPS listener and all shared components.
 type Server struct {
 	cfg      *config.Config
 	log      *slog.Logger
@@ -37,7 +40,6 @@ type Server struct {
 	cache    *cache.Cache
 	proxy    *proxy.Proxy
 	magic    *certmagic.Config
-	acme     *certmagic.ACMEIssuer
 	started  time.Time
 }
 
@@ -116,12 +118,16 @@ func (s *Server) setupTLS() error {
 			ca = certmagic.LetsEncryptStagingCA
 		}
 	}
-	s.acme = certmagic.NewACMEIssuer(s.magic, certmagic.ACMEIssuer{
-		CA:     ca,
-		Email:  s.cfg.ACMEEmail,
-		Agreed: true,
+	// TLS-ALPN-01 only: it validates entirely within the TLS handshake on
+	// the HTTPS port, so hubCDN never needs a plaintext HTTP listener or
+	// port 80 reachable from the internet.
+	acme := certmagic.NewACMEIssuer(s.magic, certmagic.ACMEIssuer{
+		CA:                   ca,
+		Email:                s.cfg.ACMEEmail,
+		Agreed:               true,
+		DisableHTTPChallenge: true,
 	})
-	s.magic.Issuers = []certmagic.Issuer{s.acme}
+	s.magic.Issuers = []certmagic.Issuer{acme}
 	return nil
 }
 
@@ -171,8 +177,8 @@ func (s *Server) onCertEvent(_ context.Context, event string, data map[string]an
 	return nil
 }
 
-// Run starts both listeners and the background loops, blocking until ctx is
-// canceled, then shuts down gracefully.
+// Run starts the HTTPS listener and the background loops, blocking until
+// ctx is canceled, then shuts down gracefully.
 func (s *Server) Run(ctx context.Context) error {
 	go s.registry.Run(ctx)
 	go s.cache.Watchdog(ctx, s.cache.Budget(), s.cfg.CacheMemHeadroomBytes, s.log)
@@ -189,14 +195,8 @@ func (s *Server) Run(ctx context.Context) error {
 		IdleTimeout:       2 * time.Minute,
 		ErrorLog:          slog.NewLogLogger(s.log.Handler(), slog.LevelDebug),
 	}
-	httpSrv := &http.Server{
-		Addr:              s.cfg.HTTPAddr,
-		Handler:           s.acme.HTTPChallengeHandler(http.HandlerFunc(s.routeHTTP)),
-		ReadHeaderTimeout: 15 * time.Second,
-		IdleTimeout:       2 * time.Minute,
-	}
 
-	errCh := make(chan error, 2)
+	errCh := make(chan error, 1)
 	go func() {
 		ln, err := net.Listen("tcp", httpsSrv.Addr)
 		if err != nil {
@@ -205,10 +205,6 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 		s.log.Info("https listening", "addr", httpsSrv.Addr)
 		errCh <- httpsSrv.ServeTLS(ln, "", "")
-	}()
-	go func() {
-		s.log.Info("http listening", "addr", httpSrv.Addr)
-		errCh <- httpSrv.ListenAndServe()
 	}()
 
 	select {
@@ -221,22 +217,8 @@ func (s *Server) Run(ctx context.Context) error {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_ = httpSrv.Shutdown(shutdownCtx)
 	_ = httpsSrv.Shutdown(shutdownCtx)
 	return nil
-}
-
-// routeHTTP handles plain-HTTP traffic that is not an ACME challenge.
-// Requests addressed to the node itself (its hostname or bare IP) get the
-// landing page directly — an IP cannot get a certificate, so redirecting it
-// to HTTPS would dead-end. Customer domains redirect to HTTPS.
-func (s *Server) routeHTTP(w http.ResponseWriter, r *http.Request) {
-	host := hostOnly(r.Host)
-	if host == "" || host == s.cfg.Hostname || !dnsx.ValidHost(host) {
-		s.serveNode(w, r)
-		return
-	}
-	redirectHTTPS(w, r)
 }
 
 // route dispatches an HTTPS request: node pages for the node's own
@@ -311,11 +293,6 @@ func (s *Server) serveStats(w http.ResponseWriter) {
 			"evictions": stats.Evictions,
 		},
 	})
-}
-
-func redirectHTTPS(w http.ResponseWriter, r *http.Request) {
-	target := "https://" + hostOnly(r.Host) + r.URL.RequestURI()
-	http.Redirect(w, r, target, http.StatusMovedPermanently)
 }
 
 func hostOnly(hostport string) string {

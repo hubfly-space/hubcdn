@@ -20,9 +20,9 @@ type Config struct {
 	// counters are persisted.
 	DataDir string
 
-	// HTTPAddr and HTTPSAddr are the listen addresses. HTTP serves ACME
-	// challenges and redirects everything else to HTTPS.
-	HTTPAddr  string
+	// HTTPSAddr is the listen address. hubCDN is TLS-only: certificates are
+	// issued on-demand via TLS-ALPN-01, which is validated entirely within
+	// the TLS handshake, so there is no HTTP listener at all.
 	HTTPSAddr string
 
 	// Hostname is the public hostname of this hubCDN deployment, used on
@@ -79,7 +79,6 @@ type Config struct {
 func Load() (*Config, error) {
 	cfg := &Config{
 		DataDir:                envStr("HUBCDN_DATA_DIR", "./data"),
-		HTTPAddr:               envStr("HUBCDN_HTTP_ADDR", ":80"),
 		HTTPSAddr:              envStr("HUBCDN_HTTPS_ADDR", ":443"),
 		Hostname:               envStr("HUBCDN_HOSTNAME", ""),
 		ACMEEmail:              envStr("HUBCDN_ACME_EMAIL", ""),

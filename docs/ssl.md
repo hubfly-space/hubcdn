@@ -8,9 +8,11 @@ provisioned ahead of time.
 ## Lifecycle
 
 1. **Handshake for an unknown host** → the issuance gate runs (below). If it
-   passes, an ACME order is placed and answered with the TLS-ALPN-01 or
-   HTTP-01 challenge (both are served automatically; port 80 must be
-   reachable for HTTP-01).
+   passes, an ACME order is placed and answered with the **TLS-ALPN-01**
+   challenge, which the CA validates entirely within the TLS handshake on
+   port 443 — hubCDN is TLS-only and never opens an HTTP port (HTTP-01 is
+   explicitly disabled). The only network requirement is that your public
+   port 443 reaches this node's HTTPS listener.
 2. **Certificates are cached in memory and persisted** under
    `<data-dir>/certs/`, so restarts don't re-issue anything.
 3. **Renewal is automatic.** certmagic renews in the background well before
