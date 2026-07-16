@@ -80,6 +80,18 @@ templ layout(title string, refresh bool) {
 					font-size: 0.9rem;
 				}
 				.notice strong { color: var(--accent); }
+				.results {
+					background: #fff;
+					border: 1px solid var(--line);
+					border-radius: 8px;
+					padding: 1.25rem 1.5rem 1.5rem;
+					margin: 1.5rem 0 0;
+				}
+				.results-title { font-size: 1rem; font-weight: 500; margin: 0 0 0.75rem; }
+				.results-title b { color: var(--accent); }
+				.results table { margin: 0 0 0.75rem; }
+				.results td strong { color: var(--accent); }
+				.results .muted { margin: 0; }
 				footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 				footer p { color: var(--muted); font-size: 0.85rem; }
 				a { color: var(--accent); }

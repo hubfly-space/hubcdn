@@ -127,9 +127,46 @@ func Landing(hostname string, ips []string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = resultsSection().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = layout("hubCDN — self-hosted CDN", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func resultsSection() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"results\"><p class=\"results-title\">Results: <b>dummy-web.uhost.pro</b> is faster</p><table><tr><th>Metric</th><th>dummy-web.uhost.pro</th><th>origin-dummy-web.uhost.pro</th></tr><tr><td>Avg. first byte (TTFB)</td><td><strong>0.595s</strong></td><td>1.153s</td></tr><tr><td>Avg. total time</td><td><strong>0.702s</strong></td><td>1.153s</td></tr><tr><td>Response size</td><td>12,881 bytes</td><td>12,881 bytes</td></tr></table><p class=\"muted\"><b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to first byte than the origin — served from hubCDN's edge cache instead of round-tripping across continents on every request.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -153,12 +190,12 @@ func configReference() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var6 == nil {
-			templ_7745c5c3_Var6 = templ.NopComponent
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
