@@ -70,6 +70,11 @@ Full deployment guide (systemd, Docker, hardening, multi-node, `make deploy`): [
   ([docs/caching.md](docs/caching.md)).
 - **WebSockets & streaming** — Upgrade requests tunnel straight through;
   SSE and chunked responses stream with periodic flushing.
+- **Image CDN with zero setup** — wrap any public image URL in
+  `/img/<options>/<url>` and get a resized, compressed, edge-cached
+  rendition back: resize, fit/crop modes, quality, format conversion,
+  grayscale, blur, flips, dpr scaling, metadata stripping. Renditions are
+  kept up to 7 days with automatic LRU purging ([docs/images.md](docs/images.md)).
 - **Multi-node routing via Bunny DNS** — each node registers itself in a
   Bunny DNS zone on startup and removes itself on shutdown, giving you
   DNS-distributed traffic across a fleet ([docs/self-hosting.md](docs/self-hosting.md#multiple-nodes-with-bunny-dns)).
@@ -82,6 +87,7 @@ Full deployment guide (systemd, Docker, hardening, multi-node, `make deploy`): [
 | [docs/self-hosting.md](docs/self-hosting.md) | Deployment, every `HUBCDN_*` variable, ops endpoints |
 | [docs/dns-records.md](docs/dns-records.md) | The `hubcdn.v1.*` record specification |
 | [docs/caching.md](docs/caching.md) | Cache behavior, modes, memory management |
+| [docs/images.md](docs/images.md) | The `/img/` image optimization endpoint |
 | [docs/ssl.md](docs/ssl.md) | Certificate lifecycle and the issuance guard |
 
 ## Development
