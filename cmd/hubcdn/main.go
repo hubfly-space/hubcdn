@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,9 +17,23 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/server"
 )
 
+// version, commit and date are set via -ldflags at release build time (see
+// .goreleaser.yaml); they stay at these defaults for `go build`/`go run`.
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
-		os.Exit(runHealthCheck())
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "healthcheck":
+			os.Exit(runHealthCheck())
+		case "version", "--version", "-v":
+			fmt.Printf("hubcdn %s (commit %s, built %s)\n", version, commit, date)
+			os.Exit(0)
+		}
 	}
 
 	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -53,6 +68,7 @@ func main() {
 	}
 
 	log.Info("hubcdn starting",
+		"version", version,
 		"hostname", cfg.Hostname,
 		"data_dir", cfg.DataDir,
 		"acme_staging", cfg.ACMEStaging,

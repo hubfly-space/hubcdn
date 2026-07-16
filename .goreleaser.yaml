@@ -1,0 +1,63 @@
+version: 2
+
+project_name: hubcdn
+
+before:
+  hooks:
+    - go install github.com/a-h/templ/cmd/templ@v0.3.865
+    - templ generate
+    - go mod tidy
+
+builds:
+  - id: hubcdn
+    main: ./cmd/hubcdn
+    binary: hubcdn
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+
+archives:
+  - id: hubcdn
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - README.md
+      - LICENSE
+      - docs/**
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^Merge pull request"
+      - "^Merge branch"
+
+release:
+  github:
+    owner: hubfly-space
+    name: hubcdn
+  header: |
+    Self-hosted CDN configured entirely through DNS. See
+    [docs/self-hosting.md](https://github.com/hubfly-space/hubcdn/blob/main/docs/self-hosting.md)
+    for the full deployment guide, or pull the container image:
+
+    ```sh
+    docker pull ghcr.io/hubfly-space/hubcdn:{{ .Version }}
+    ```

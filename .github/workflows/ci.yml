@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEMPL_VERSION: v0.3.865
+
+jobs:
+  test:
+    name: Test & vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@${TEMPL_VERSION}
+
+      - name: Verify generated templ code is up to date
+        run: |
+          templ generate
+          if ! git diff --exit-code -- '*_templ.go'; then
+            echo "::error::templ-generated files are out of date; run 'templ generate' and commit the result" >&2
+            exit 1
+          fi
+
+      - name: gofmt
+        run: |
+          out="$(gofmt -l .)"
+          if [ -n "$out" ]; then
+            echo "::error::gofmt found unformatted files:"
+            echo "$out"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: go build ./...
+
+      - name: go test (race)
+        run: go test -race -count=1 ./...
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: hubcdn:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
