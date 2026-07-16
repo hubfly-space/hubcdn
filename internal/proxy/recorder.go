@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/cache"
 )
 
 // recorder wraps the client's ResponseWriter on a cache miss. It streams the

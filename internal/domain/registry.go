@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/dnsx"
+	"github.com/hubfly-space/hubcdn/internal/dnsx"
 )
 
 // Registry is the concurrent set of known domains with JSON persistence and

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/cache"
-	"github.com/hubcdn/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/domain"
 )
 
 func testSnapshot(t *testing.T, origin string, settings domain.Settings) domain.Snapshot {

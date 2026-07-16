@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/cache"
-	"github.com/hubcdn/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/domain"
 )
 
 type ctxKey int
