@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/caddyserver/certmagic v0.25.4
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	golang.org/x/image v0.44.0
 	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.22.0
