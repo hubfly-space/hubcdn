@@ -83,5 +83,21 @@ func (rec *recorder) object() *cache.Object {
 		Body:     rec.body,
 		StoredAt: time.Now(),
 		TTL:      rec.ttl,
+		StaleFor: rec.policy.StaleFor,
 	}
 }
+
+// discardWriter satisfies http.ResponseWriter for background revalidation
+// fetches: the recorder wrapping it captures the response for the cache and
+// nothing goes to a client.
+type discardWriter struct {
+	header http.Header
+}
+
+func newDiscardWriter() *discardWriter {
+	return &discardWriter{header: make(http.Header)}
+}
+
+func (d *discardWriter) Header() http.Header         { return d.header }
+func (d *discardWriter) WriteHeader(int)             {}
+func (d *discardWriter) Write(b []byte) (int, error) { return len(b), nil }

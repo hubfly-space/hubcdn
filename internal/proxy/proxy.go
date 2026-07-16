@@ -19,6 +19,7 @@ import (
 	"net/http/httputil"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
@@ -34,6 +35,12 @@ type Proxy struct {
 	cache *cache.Cache
 	rp    *httputil.ReverseProxy
 	log   *slog.Logger
+
+	// refreshing tracks cache keys with an in-flight background
+	// revalidation so a burst of stale hits triggers one origin fetch,
+	// not one per request.
+	refreshMu  sync.Mutex
+	refreshing map[string]struct{}
 }
 
 // New builds the shared reverse proxy. One instance serves every domain;
@@ -52,7 +59,7 @@ func New(c *cache.Cache, log *slog.Logger) *Proxy {
 		ExpectContinueTimeout: time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	p := &Proxy{cache: c, log: log}
+	p := &Proxy{cache: c, log: log, refreshing: make(map[string]struct{})}
 	p.rp = &httputil.ReverseProxy{
 		Transport:     transport,
 		FlushInterval: 100 * time.Millisecond,
@@ -105,13 +112,21 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, snap domain.Sn
 	enc := normalizeEncoding(r.Header.Get("Accept-Encoding"))
 	key := cache.Key(snap.Host, r.Method, r.URL.RequestURI(), enc)
 
-	if obj, ok := p.cache.Get(key); ok {
-		p.serveCached(w, r, obj)
+	switch obj, freshness := p.cache.Get(key); freshness {
+	case cache.Fresh:
+		p.serveCached(w, r, obj, "HIT")
+		return
+	case cache.Stale:
+		// Serve the expired copy instantly and revalidate in the
+		// background: after warmup, no client ever waits on the origin.
+		p.revalidate(key, r, snap, enc)
+		p.serveCached(w, r, obj, "STALE")
 		return
 	}
 
 	// Miss: fetch a consistent encoding variant from the origin and tee
 	// the body into the cache while streaming it to the client.
+	w.Header().Set("X-Hubcdn-Cache", "MISS")
 	r.Header.Set("Accept-Encoding", enc)
 	rec := &recorder{
 		ResponseWriter: w,
@@ -129,14 +144,66 @@ func (p *Proxy) forward(w http.ResponseWriter, r *http.Request, snap domain.Snap
 	p.rp.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// revalidate refreshes a stale cache entry from the origin in the
+// background. At most one refresh runs per key; a failed or no-longer
+// cacheable fetch leaves the stale entry in place, which also keeps a
+// domain serveable through short origin outages.
+func (p *Proxy) revalidate(key string, r *http.Request, snap domain.Snapshot, enc string) {
+	p.refreshMu.Lock()
+	if _, busy := p.refreshing[key]; busy {
+		p.refreshMu.Unlock()
+		return
+	}
+	p.refreshing[key] = struct{}{}
+	p.refreshMu.Unlock()
+
+	// Rebuild the request from scratch: the client's request dies with its
+	// handler, and conditional or per-user headers must not leak into the
+	// shared cached copy.
+	u := *r.URL
+	req := &http.Request{
+		Method:     r.Method,
+		URL:        &u,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		Host:       snap.Host,
+		RemoteAddr: r.RemoteAddr,
+		Header: http.Header{
+			"Accept-Encoding": {enc},
+			"User-Agent":      {r.UserAgent()},
+		},
+	}
+	policy := snap.Settings.Policy()
+
+	go func() {
+		defer func() {
+			p.refreshMu.Lock()
+			delete(p.refreshing, key)
+			p.refreshMu.Unlock()
+		}()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		rec := &recorder{
+			ResponseWriter: newDiscardWriter(),
+			reqPath:        req.URL.Path,
+			policy:         policy,
+		}
+		p.forward(rec, req.WithContext(ctx), snap)
+		if obj := rec.object(); obj != nil {
+			p.cache.Set(key, obj)
+		}
+	}()
+}
+
 // serveCached writes a cache hit, honoring conditional request headers.
-func (p *Proxy) serveCached(w http.ResponseWriter, r *http.Request, obj *cache.Object) {
+func (p *Proxy) serveCached(w http.ResponseWriter, r *http.Request, obj *cache.Object, status string) {
 	h := w.Header()
 	for k, vs := range obj.Header {
 		h[k] = vs
 	}
 	h.Set("Age", strconv.FormatInt(int64(obj.Age(time.Now()).Seconds()), 10))
-	h.Set("X-Hubcdn-Cache", "HIT")
+	h.Set("X-Hubcdn-Cache", status)
 
 	if notModified(r, obj) {
 		w.WriteHeader(http.StatusNotModified)

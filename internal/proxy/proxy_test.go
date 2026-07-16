@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -31,6 +32,90 @@ func testSnapshot(t *testing.T, origin string, settings domain.Settings) domain.
 
 func testProxy() *Proxy {
 	return New(cache.New(64<<20), slog.New(slog.DiscardHandler))
+}
+
+func TestStaleWhileRevalidate(t *testing.T) {
+	var hits atomic.Int64
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := hits.Add(1)
+		w.Header().Set("Cache-Control", "max-age=60")
+		fmt.Fprintf(w, "v%d", n)
+	}))
+	defer origin.Close()
+
+	c := cache.New(64 << 20)
+	p := New(c, slog.New(slog.DiscardHandler))
+	snap := testSnapshot(t, origin.URL, domain.DefaultSettings(32<<20))
+
+	do := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodGet, "https://site.example.com/page", nil)
+		w := httptest.NewRecorder()
+		p.ServeHTTP(w, r, snap)
+		return w
+	}
+
+	if got := do().Body.String(); got != "v1" {
+		t.Fatalf("first fetch: %q", got)
+	}
+
+	// Age the entry past its TTL but within the stale window.
+	key := cache.Key("site.example.com", http.MethodGet, "/page", "")
+	obj, _ := c.Get(key)
+	obj.StoredAt = time.Now().Add(-2 * time.Minute)
+
+	stale := do()
+	if got := stale.Header().Get("X-Hubcdn-Cache"); got != "STALE" {
+		t.Fatalf("want STALE, got %q", got)
+	}
+	if got := stale.Body.String(); got != "v1" {
+		t.Fatalf("stale response must serve the old copy instantly, got %q", got)
+	}
+
+	// The background revalidation should replace the entry with v2.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if obj, f := c.Get(key); f == cache.Fresh && string(obj.Body) == "v2" {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	refreshed := do()
+	if got := refreshed.Header().Get("X-Hubcdn-Cache"); got != "HIT" {
+		t.Fatalf("want HIT after revalidation, got %q", got)
+	}
+	if got := refreshed.Body.String(); got != "v2" {
+		t.Fatalf("want v2 after revalidation, got %q", got)
+	}
+	if n := hits.Load(); n != 2 {
+		t.Fatalf("origin hit %d times, want 2 (initial + one revalidation)", n)
+	}
+}
+
+func TestAggressiveCachesDespiteCookies(t *testing.T) {
+	var hits atomic.Int64
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits.Add(1)
+		_, _ = io.WriteString(w, "shared page")
+	}))
+	defer origin.Close()
+
+	settings := domain.DefaultSettings(32 << 20)
+	settings.CacheMode = cache.ModeAggressive
+	p := testProxy()
+	snap := testSnapshot(t, origin.URL, settings)
+
+	for i := 0; i < 3; i++ {
+		r := httptest.NewRequest(http.MethodGet, "https://site.example.com/", nil)
+		r.Header.Set("Cookie", "_ga=GA1.2.123; consent=yes")
+		w := httptest.NewRecorder()
+		p.ServeHTTP(w, r, snap)
+		if w.Body.String() != "shared page" {
+			t.Fatalf("bad body: %q", w.Body.String())
+		}
+	}
+	if n := hits.Load(); n != 1 {
+		t.Fatalf("origin hit %d times, want 1 — cookies must not bypass aggressive caching", n)
+	}
 }
 
 func TestProxyMissThenHit(t *testing.T) {
