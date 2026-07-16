@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TEMPL_VERSION: v0.3.865
+  TEMPL_VERSION: v0.3.1020
 
 jobs:
   test:

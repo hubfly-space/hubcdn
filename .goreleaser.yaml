@@ -4,7 +4,7 @@ project_name: hubcdn
 
 before:
   hooks:
-    - go install github.com/a-h/templ/cmd/templ@v0.3.865
+    - go install github.com/a-h/templ/cmd/templ@v0.3.1020
     - templ generate
     - go mod tidy
 
