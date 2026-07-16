@@ -1,0 +1,45 @@
+package views
+
+// Setup is served on a customer domain that points at the node but has no
+// origin TXT record yet. The page auto-refreshes so it flips to the real
+// site as soon as the record propagates.
+templ Setup(host, originRecord, configRecord string) {
+	@layout(host+" — almost there", true) {
+		<div class="badge">one step left</div>
+		<h1><span>{ host }</span> is connected</h1>
+		<p class="lead">
+			DNS is pointing here and your TLS certificate is live. hubCDN just
+			doesn't know where your server is yet.
+		</p>
+		<h2>Add your origin TXT record</h2>
+		<p>In your DNS provider, create this record:</p>
+		<pre class="record">{ originRecord }    TXT    <b>"https://origin.your-server.com"</b></pre>
+		<p>
+			Replace the value with the address of your actual server — a full URL
+			(<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>)
+			or a bare hostname, which defaults to HTTPS.
+		</p>
+		<p class="muted">
+			This page checks for the record automatically and refreshes every
+			15&nbsp;seconds. As soon as the record propagates, your site is served
+			from here — cached, compressed and TLS-terminated.
+		</p>
+		<h2>Optional: caching &amp; behavior</h2>
+		<p>Tune this domain with a second TXT record:</p>
+		<pre class="record">{ configRecord }    TXT    <b>"cache=aggressive; ttl=6h"</b></pre>
+		@configReference()
+	}
+}
+
+// SetupError is served when a domain's origin lookup keeps failing.
+templ SetupError(host, originRecord, lastError string) {
+	@layout(host+" — configuration problem", true) {
+		<div class="badge">needs attention</div>
+		<h1>Can't reach the configuration for <span>{ host }</span></h1>
+		<p class="lead">The origin record for this domain could not be resolved.</p>
+		<pre class="record">{ originRecord }    TXT    <b>"https://origin.your-server.com"</b></pre>
+		<p>Last error:</p>
+		<pre class="record">{ lastError }</pre>
+		<p class="muted">hubCDN keeps retrying automatically; this page refreshes on its own.</p>
+	}
+}
