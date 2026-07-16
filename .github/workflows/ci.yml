@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TEMPL_VERSION: v0.3.865
+  TEMPL_VERSION: v0.3.1020
 
 jobs:
   test:
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Build image (not pushed)
         uses: docker/build-push-action@v6

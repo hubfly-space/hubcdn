@@ -40,6 +40,12 @@ const (
 
 	// maxSourceBytes caps the size of a fetched source image.
 	maxSourceBytes = 20 << 20
+	// maxCacheableBytes caps a single optimized rendition admitted into the
+	// shared cache. An output past this is still served, just re-optimized
+	// on every request instead of cached, so one pathological request
+	// (e.g. a huge explicit w=/h= on an already-large source) can't crowd
+	// out the rest of the cache.
+	maxCacheableBytes = 20 << 20
 
 	fetchTimeout = 25 * time.Second
 	maxRedirects = 3
@@ -163,7 +169,9 @@ func (h *Handler) optimize(ctx context.Context, key string, src *url.URL, params
 		StoredAt: time.Now(),
 		TTL:      retention,
 	}
-	h.cache.Set(key, obj)
+	if len(obj.Body) <= maxCacheableBytes {
+		h.cache.Set(key, obj)
+	}
 	return obj, nil
 }
 

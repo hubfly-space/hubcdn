@@ -85,14 +85,30 @@ func toNRGBA(img image.Image) *image.NRGBA {
 	return dst
 }
 
+// defaultMaxDim caps the longest side when the caller requests no explicit
+// width or height. Without it, "just recompress" on an untouched camera or
+// stock-photo original (routinely 6000px+, 20+ megapixels) barely shrinks
+// at all: JPEG size at that resolution is dominated by pixel count, not the
+// quality setting, so a quality-only re-encode can still come back several
+// megabytes. Every mainstream image CDN applies a default cap for exactly
+// this reason. An explicit w= or h= always overrides it.
+const defaultMaxDim = 2048
+
 // resize maps img into the box requested by p. Zero width and height means
-// no scaling.
+// scale down to defaultMaxDim on the longest side, if the source is larger.
 func resize(img *image.NRGBA, p Params) *image.NRGBA {
 	sw, sh := img.Bounds().Dx(), img.Bounds().Dy()
 	reqW := scaleDim(p.Width, p.DPR)
 	reqH := scaleDim(p.Height, p.DPR)
 	if reqW == 0 && reqH == 0 {
-		return img
+		if sw <= defaultMaxDim && sh <= defaultMaxDim {
+			return img
+		}
+		if sw >= sh {
+			reqW = defaultMaxDim
+		} else {
+			reqH = defaultMaxDim
+		}
 	}
 	// Remember which dimensions the caller actually asked for: the ratio
 	// below must come from those, not from a derived (integer-rounded)

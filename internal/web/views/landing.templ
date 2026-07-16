@@ -78,6 +78,7 @@ templ imagePane() {
 		Wrap any public image URL and get back a compressed, resized,
 		edge-cached copy. No DNS changes, no signup — just a URL.
 	</p>
+	@imageExample()
 	<h2>URL format</h2>
 	<pre class="record">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre>
 	<pre class="record">/img/<b>w=800,q=75,f=jpeg</b>/https://your-site.com/photo.jpg</pre>
@@ -161,6 +162,38 @@ templ imagePane() {
 		are purged automatically and simply re-optimized on their next
 		request — so hotlinking these URLs is always safe. Animated GIFs are
 		passed through untouched.
+	</div>
+}
+
+templ imageExample() {
+	<div class="results">
+		<p class="results-title">Real example: <b>110x smaller</b>, automatically</p>
+		<img
+			class="example"
+			src="/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg"
+			alt="Photo optimized live through hubCDN's image endpoint"
+			loading="lazy"
+		/>
+		<table>
+			<tr><th>Metric</th><th>Original</th><th>Through hubCDN</th></tr>
+			<tr><td>File size</td><td>3.7 MB</td><td><strong>34 KB</strong></td></tr>
+			<tr><td>Dimensions</td><td>6000×4000</td><td><strong>600×400</strong></td></tr>
+			<tr><td>Format</td><td>JPEG, untouched</td><td>JPEG, quality 80, no metadata</td></tr>
+		</table>
+		<p class="muted">
+			That preview above is this exact photo, live, resized with
+			<code>w=600</code> — <strong>99% smaller (110x)</strong>. Even with
+			zero options at all (<code>/img/_/&lt;url&gt;</code>), just the
+			default 2048px cap and re-encode alone takes it from 3.7&nbsp;MB
+			down to <strong>247&nbsp;KB</strong> — a 93% reduction — with no
+			configuration whatsoever.
+		</p>
+		<p class="muted">
+			The first request pays a one-time cost to fetch and optimize the
+			source (a few seconds, since this source is large); every request
+			after that is served instantly from cache.
+		</p>
+		<pre class="record">/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg</pre>
 	</div>
 }
 

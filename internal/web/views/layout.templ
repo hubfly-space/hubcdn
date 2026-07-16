@@ -158,7 +158,17 @@ templ layout(title string, refresh bool) {
 				.results-title b { color: var(--accent); }
 				.results table { margin: 0 0 0.75rem; }
 				.results td strong { color: var(--accent); }
-				.results .muted { margin: 0; }
+				.results .muted { margin: 0.5rem 0 0; }
+				.results img.example {
+					display: block;
+					width: 100%;
+					max-width: 100%;
+					height: auto;
+					margin-bottom: 1rem;
+					border: 1px solid var(--line);
+					border-radius: 6px;
+				}
+				.results pre.record { margin-top: 1rem; }
 				footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 				footer p { color: var(--muted); font-size: 0.85rem; }
 				a { color: var(--accent); }
