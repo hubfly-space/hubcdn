@@ -1,0 +1,50 @@
+services:
+  hubcdn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hubcdn:latest
+    container_name: hubcdn
+    restart: unless-stopped
+
+    environment:
+      HUBCDN_DATA_DIR: /data
+      HUBCDN_ACME_EMAIL: ${HUBCDN_ACME_EMAIL:?set HUBCDN_ACME_EMAIL in .env}
+      HUBCDN_PUBLIC_IPS: ${HUBCDN_PUBLIC_IPS:?set HUBCDN_PUBLIC_IPS in .env}
+      HUBCDN_HOSTNAME: ${HUBCDN_HOSTNAME:?set HUBCDN_HOSTNAME in .env}
+      HUBCDN_ACME_STAGING: ${HUBCDN_ACME_STAGING:-false}
+      HUBCDN_HTTP_ADDR: :${HUBCDN_HTTP_PORT:-8080}
+      HUBCDN_HTTPS_ADDR: :${HUBCDN_HTTPS_PORT:-4403}
+      HUBCDN_RESOLVER: ${HUBCDN_RESOLVER:-}
+      HUBCDN_CACHE_MAX_BYTES: ${HUBCDN_CACHE_MAX_BYTES:-}
+      HUBCDN_CACHE_MAX_OBJECT_BYTES: ${HUBCDN_CACHE_MAX_OBJECT_BYTES:-}
+      HUBCDN_BUNNY_API_KEY: ${HUBCDN_BUNNY_API_KEY:-}
+      HUBCDN_BUNNY_ZONE_ID: ${HUBCDN_BUNNY_ZONE_ID:-}
+
+    ports:
+      - "${HUBCDN_HOST_HTTP_PORT:-8080}:${HUBCDN_HTTP_PORT:-8080}"
+      - "${HUBCDN_HOST_HTTPS_PORT:-4403}:${HUBCDN_HTTPS_PORT:-4403}"
+
+    volumes:
+      - hubcdn-data:/data
+
+    # Hardening: distroless already runs as non-root; this locks the rest
+    # of the container down. /data is the only writable path (the volume
+    # mount above), and /tmp is a small in-memory scratch area in case the
+    # Go runtime or a dependency ever needs one.
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  hubcdn-data:
