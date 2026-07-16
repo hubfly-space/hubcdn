@@ -1,0 +1,6 @@
+/hubcdn
+/data/
+*.test
+.env
+.env.*
+!.env.example
