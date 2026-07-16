@@ -11,7 +11,12 @@ adapting while running.
   concurrent requests almost never contend.
 - **Byte-accounted**: every entry is charged its real footprint (body +
   headers + overhead). Eviction is LRU per shard whenever a shard exceeds
-  its share of the global budget.
+  its share of the global budget. Admission only rejects an object bigger
+  than the *entire* budget — a large-but-legitimate entry (an unresized
+  photo, say) is still cached even if it alone exceeds its shard's usual
+  fair share; that shard just runs over its nominal share until its own
+  older entries age out, rather than the object silently never being
+  cached at all.
 - **SHA-256 keys** derived from `host + method + URI + encoding bucket`.
   Host is part of the hash, so entries can never collide or leak across
   domains, and the in-memory key space carries no readable request data.
