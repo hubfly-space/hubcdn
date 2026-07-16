@@ -64,7 +64,7 @@ func layout(title string, refresh bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<footer><p>Powered by <a href=\"https://github.com/hubcdn/hubcdn\">hubCDN</a> — the self-hosted CDN configured entirely through DNS.</p></footer></main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<footer><p>Powered by <a href=\"https://github.com/hubfly-space/hubcdn\">hubCDN</a> — the self-hosted CDN configured entirely through DNS.</p></footer></main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -24,13 +24,13 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/hubcdn/hubcdn/internal/cache"
-	"github.com/hubcdn/hubcdn/internal/certguard"
-	"github.com/hubcdn/hubcdn/internal/config"
-	"github.com/hubcdn/hubcdn/internal/dnsx"
-	"github.com/hubcdn/hubcdn/internal/domain"
-	"github.com/hubcdn/hubcdn/internal/proxy"
-	"github.com/hubcdn/hubcdn/internal/web"
+	"github.com/hubfly-space/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/certguard"
+	"github.com/hubfly-space/hubcdn/internal/config"
+	"github.com/hubfly-space/hubcdn/internal/dnsx"
+	"github.com/hubfly-space/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/proxy"
+	"github.com/hubfly-space/hubcdn/internal/web"
 )
 
 // Server owns the HTTPS listener and all shared components.

@@ -6,9 +6,9 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/hubcdn/hubcdn/internal/dnsx"
-	"github.com/hubcdn/hubcdn/internal/domain"
-	"github.com/hubcdn/hubcdn/internal/web/views"
+	"github.com/hubfly-space/hubcdn/internal/dnsx"
+	"github.com/hubfly-space/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/web/views"
 )
 
 // RenderLanding writes the node landing page with onboarding instructions.
