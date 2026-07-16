@@ -40,9 +40,11 @@ HUBCDN_HOSTNAME=cdn.example.net \
 ./hubcdn
 ```
 
-Visiting `https://cdn.example.net` (or the bare IP over HTTP) shows the
-instructions page your users follow. Use `HUBCDN_ACME_STAGING=true` while
-testing so you never touch production ACME limits.
+Visiting `https://cdn.example.net` shows the instructions page your users
+follow — hubCDN is TLS-only, so there's no plain-HTTP fallback, not even for
+its own landing page; the first HTTPS request issues its certificate
+on-demand just like any customer domain. Use `HUBCDN_ACME_STAGING=true`
+while testing so you never touch production ACME limits.
 
 ### With Docker
 

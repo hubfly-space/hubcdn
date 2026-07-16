@@ -19,15 +19,15 @@ FROM gcr.io/distroless/static-debian12:nonroot AS final
 
 COPY --from=build /out/hubcdn /usr/local/bin/hubcdn
 
-# Both defaults are unprivileged (>1024), so the container never needs root
-# or CAP_NET_BIND_SERVICE. Map these to 80/443 from outside (host port
-# mapping, a reverse proxy, or NAT) as needed for your deployment.
+# Unprivileged (>1024), so the container never needs root or
+# CAP_NET_BIND_SERVICE. Map this to 443 from outside (host port mapping, a
+# reverse proxy, or NAT) as needed for your deployment. hubCDN is TLS-only —
+# there is no HTTP port to expose.
 ENV HUBCDN_DATA_DIR=/data \
-    HUBCDN_HTTP_ADDR=:8080 \
     HUBCDN_HTTPS_ADDR=:4403
 
 VOLUME ["/data"]
-EXPOSE 8080 4403
+EXPOSE 4403
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD ["/usr/local/bin/hubcdn", "healthcheck"]

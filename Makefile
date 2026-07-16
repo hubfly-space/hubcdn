@@ -31,7 +31,6 @@ build: generate ## Build the hubcdn binary
 .PHONY: dev
 dev: generate ## Run locally against staging ACME with a local data dir
 	HUBCDN_DATA_DIR=./data \
-	HUBCDN_HTTP_ADDR=:8080 \
 	HUBCDN_HTTPS_ADDR=:4403 \
 	HUBCDN_ACME_STAGING=true \
 	HUBCDN_ACME_EMAIL=$${HUBCDN_ACME_EMAIL:-dev@localhost} \
