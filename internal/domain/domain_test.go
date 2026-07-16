@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/cache"
 )
 
 func TestParseSettings(t *testing.T) {

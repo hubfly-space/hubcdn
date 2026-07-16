@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hubcdn/hubcdn/internal/bunny"
-	"github.com/hubcdn/hubcdn/internal/config"
-	"github.com/hubcdn/hubcdn/internal/server"
+	"github.com/hubfly-space/hubcdn/internal/bunny"
+	"github.com/hubfly-space/hubcdn/internal/config"
+	"github.com/hubfly-space/hubcdn/internal/server"
 )
 
 func main() {

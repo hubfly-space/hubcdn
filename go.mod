@@ -1,4 +1,4 @@
-module github.com/hubcdn/hubcdn
+module github.com/hubfly-space/hubcdn
 
 go 1.25
 
