@@ -1,0 +1,14 @@
+.git
+.gitignore
+.dockerignore
+.env
+.env.*
+!.env.example
+data/
+*.log
+README.md
+LICENSE
+docs/
+Makefile
+scripts/
+docker-compose.yml
