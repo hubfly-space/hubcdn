@@ -3,7 +3,7 @@ module github.com/hubfly-space/hubcdn
 go 1.25.0
 
 require (
-	github.com/a-h/templ v0.3.865
+	github.com/a-h/templ v0.3.1020
 	github.com/caddyserver/certmagic v0.23.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/image v0.44.0
