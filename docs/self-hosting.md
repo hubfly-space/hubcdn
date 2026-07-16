@@ -2,8 +2,10 @@
 
 ## Requirements
 
-- A server with ports **80 and 443** reachable from the internet (80 is
-  needed for ACME HTTP-01 challenges and HTTP→HTTPS redirects).
+- A server with **port 443** reachable from the internet. hubCDN is
+  TLS-only: certificates are issued via the TLS-ALPN-01 ACME challenge,
+  which validates entirely inside the TLS handshake on port 443 — no port
+  80 is needed anywhere, and hubCDN never opens an HTTP listener.
 - A public IP (v4 and/or v6).
 - Optionally a hostname for the node itself (e.g. `cdn.example.net`) so
   users can CNAME to it instead of hardcoding your IP.
@@ -36,8 +38,7 @@ suffixes; durations use Go syntax (`30s`, `5m`, `6h`).
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `HUBCDN_DATA_DIR` | `./data` | Certificates, domain registry, issuance counters |
-| `HUBCDN_HTTP_ADDR` | `:80` | HTTP listener (ACME + redirect) |
-| `HUBCDN_HTTPS_ADDR` | `:443` | HTTPS listener |
+| `HUBCDN_HTTPS_ADDR` | `:443` | The (only) listener — hubCDN is TLS-only |
 | `HUBCDN_HOSTNAME` | — | This node's own hostname; serves the landing page |
 | `HUBCDN_PUBLIC_IPS` | — | Comma-separated public IPs of this node |
 | `HUBCDN_RESOLVER` | system | DNS server (`host:port`) for all lookups |
@@ -95,9 +96,9 @@ StateDirectory=hubcdn
 DynamicUser=yes
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 Restart=on-failure
-# CAP_NET_BIND_SERVICE is only needed for the bare-metal defaults
-# (HUBCDN_HTTP_ADDR=:80, HUBCDN_HTTPS_ADDR=:443). Drop it if you run on
-# unprivileged ports as the Docker image does.
+# CAP_NET_BIND_SERVICE is only needed for the bare-metal default
+# (HUBCDN_HTTPS_ADDR=:443, a privileged port). Drop it if you run on an
+# unprivileged port instead, as the Docker image does.
 
 [Install]
 WantedBy=multi-user.target
@@ -107,15 +108,18 @@ WantedBy=multi-user.target
 
 The image is a multi-stage build ending in `gcr.io/distroless/static-debian12:nonroot`
 — no shell, no package manager, non-root by default. The container listens
-on `:8080` (HTTP/ACME) and `:4403` (HTTPS) internally; both are unprivileged
-ports, so the container never needs `root` or `CAP_NET_BIND_SERVICE`. Map
-your real port 80/443 to these from outside — via `docker run -p`,
-docker-compose, a firewall NAT rule, or a reverse proxy in front of it.
+on `:4403` (HTTPS only — there is no HTTP port) internally, which is
+unprivileged, so the container never needs `root` or `CAP_NET_BIND_SERVICE`.
+Map your real port 443 to it from outside — via `docker run -p`,
+docker-compose, a firewall NAT rule, or a reverse proxy in front of it. Note
+that the TLS-ALPN-01 ACME challenge is always validated by the CA against
+port 443 specifically, so whatever you expose as "your public 443" must
+reach this port.
 
 ```sh
 docker build -t hubcdn .
 docker run -d --name hubcdn \
-  -p 80:8080 -p 443:4403 \
+  -p 443:4403 \
   -v hubcdn-data:/data \
   -e HUBCDN_ACME_EMAIL=you@example.com \
   -e HUBCDN_PUBLIC_IPS=203.0.113.7 \
@@ -132,12 +136,11 @@ make logs               # follow logs
 make down                # stop
 ```
 
-`docker-compose.yml` publishes ports via `HUBCDN_HOST_HTTP_PORT` /
-`HUBCDN_HOST_HTTPS_PORT` (defaulting to the same `8080`/`4403` as the
-container) and runs the container hardened: `read_only` root filesystem
-with a small `tmpfs` at `/tmp`, `cap_drop: ALL`, `no-new-privileges`, and
-bounded JSON log rotation. All ports are configurable through `.env` — see
-[.env.example](../.env.example).
+`docker-compose.yml` publishes the port via `HUBCDN_HOST_HTTPS_PORT`
+(defaulting to the same `4403` as the container) and runs the container
+hardened: `read_only` root filesystem with a small `tmpfs` at `/tmp`,
+`cap_drop: ALL`, `no-new-privileges`, and bounded JSON log rotation. The
+port is configurable through `.env` — see [.env.example](../.env.example).
 
 ### Deploying
 
@@ -185,8 +188,11 @@ issued no matter which node handles the first request.
 
 ## Operations
 
-- `GET /hubcdn/health` on the node hostname → `ok` (readiness probe).
-- `GET /hubcdn/stats` → JSON: uptime, domain count, cache counters.
+- `GET https://<node-hostname>/hubcdn/health` → `ok` (readiness probe).
+  Container/orchestrator liveness probes use a plain TCP dial against the
+  HTTPS port instead (`hubcdn healthcheck`), since a health check can't
+  complete a real TLS handshake without a matching domain identity.
+- `GET https://<node-hostname>/hubcdn/stats` → JSON: uptime, domain count, cache counters.
 - Logs are structured JSON on stderr: certificate issuances and refusals,
   domain state changes, memory-pressure events, origin errors.
 - Back up `HUBCDN_DATA_DIR` if you want restarts to preserve certificates

@@ -11,7 +11,7 @@ scaling trivial — routing between nodes is plain DNS.
 cmd/hubcdn            entrypoint: config, signals, Bunny DNS registration
 internal/
   config              HUBCDN_* environment configuration
-  server              listeners, routing, certmagic wiring
+  server              HTTPS listener, routing, certmagic wiring
   dnsx                TXT lookups, points-at-us checks, host validation
   domain              domain registry: lifecycle, settings, persistence, refresher
   certguard           certificate issuance budgets (persistent sliding windows)
@@ -23,18 +23,20 @@ internal/
 
 ## Request flow
 
+hubCDN is TLS-only — there is exactly one listener, on port 443. There is
+no HTTP port, no port 80, and no plaintext fallback anywhere, including for
+the node's own landing page.
+
 ```
-                 ┌────────────────────────────────────────────────┐
-    :80 ─────────│ ACME HTTP-01 challenges │ 301 → https          │
-                 └────────────────────────────────────────────────┘
-    :443 (TLS handshake)
+    :443 (TLS handshake, TLS-ALPN-01 for unknown hosts)
       │
       ├─ known certificate? serve it
       └─ unknown host → on-demand issuance
              │  certguard: apex/day, apex/week, global budgets
              │  dnsx: does the host resolve to this node?
-             ▼  ACME order → certificate cached + persisted
-    HTTP request
+             ▼  ACME order (TLS-ALPN-01, validated on this same port)
+                → certificate cached + persisted
+    HTTPS request
       │
       ├─ host == node hostname → landing page / health / stats
       │
@@ -50,6 +52,13 @@ internal/
                              ├─ HIT → serve from memory (Age, 304 support)
                              └─ MISS→ stream from origin, tee into cache
 ```
+
+Because TLS-ALPN-01 validates within the handshake itself, the ACME CA's
+connection lands on the same port real traffic uses — no separate port 80
+listener, HTTP→HTTPS redirect, or ACME challenge handler exists in the
+codebase at all. Container/orchestrator liveness probes use a plain TCP
+dial against the HTTPS port instead of an HTTP request, for the same
+reason (see `cmd/hubcdn/healthcheck.go`).
 
 ## Domain lifecycle
 
