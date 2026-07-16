@@ -54,17 +54,38 @@ TXT record):
 
 | | `off` | `standard` (default) | `aggressive` |
 | --- | --- | --- | --- |
-| Origin says `max-age`/`s-maxage`/`Expires` | — | cached for that long (capped at 7 days) | same |
+| Origin says `max-age`/`s-maxage`/`Expires` (positive) | — | cached for that long (capped at 7 days) | same |
 | Origin sends no freshness info | — | static assets (by extension) cached for `ttl` | *everything* cached for `ttl` |
-| Requests with cookies | — | bypass | static assets still cached |
+| Origin says `no-cache` / `max-age=0` | — | not cached | cached for `ttl` |
+| Requests with cookies | — | bypass | cached |
 
 Never cached regardless of mode: `Set-Cookie` responses, `Cache-Control:
-no-store/no-cache/private`, `Vary: *`, and non-cacheable status codes
-(anything outside 200/203/204/300/301/404/405/410/414/501).
+no-store/private`, `Vary: *`, and non-cacheable status codes (anything
+outside 200/203/204/300/301/404/405/410/414/501).
+
+**Aggressive mode and cookies.** Real browsers attach some cookie to nearly
+every request (analytics, consent banners), so bypassing on request cookies
+would defeat the cache for virtually all real traffic. Aggressive mode
+therefore ignores *request* cookies and serves everyone the shared cached
+copy — the `Set-Cookie` *response* guard still keeps session-issuing and
+personalized responses out of the cache. Use aggressive mode only for sites
+whose pages look the same for every visitor; keep `standard` for apps with
+logged-in areas.
+
+## Stale-while-revalidate
+
+An expired entry is not thrown away immediately: for the domain's `swr`
+window (default 10 minutes) it is served instantly with `X-Hubcdn-Cache:
+STALE` while one background fetch — deduplicated per URL — refreshes the
+entry from the origin. After warmup, no client ever waits on a slow origin
+round trip because of TTL expiry. If the origin is briefly down, the stale
+copy keeps the site up for the length of the window. Set `swr=0` to disable
+and expire strictly at TTL.
 
 ## Serving
 
-- Hits are served with an `Age` header and `X-Hubcdn-Cache: HIT`.
+- Hits are served with an `Age` header and `X-Hubcdn-Cache: HIT` (or
+  `STALE` during a background revalidation).
 - Conditional requests (`If-None-Match`, `If-Modified-Since`) against a
   cached entry answer `304 Not Modified` from memory without contacting the
   origin.

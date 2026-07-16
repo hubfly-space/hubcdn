@@ -21,13 +21,13 @@ func obj(body string, ttl time.Duration) *Object {
 func TestGetSet(t *testing.T) {
 	c := New(1 << 20)
 	key := Key("example.com", "GET", "/a", "gzip")
-	if _, ok := c.Get(key); ok {
+	if _, f := c.Get(key); f != Miss {
 		t.Fatal("unexpected hit on empty cache")
 	}
 	c.Set(key, obj("hello", time.Minute))
-	got, ok := c.Get(key)
-	if !ok || string(got.Body) != "hello" {
-		t.Fatalf("want hello, got %v %v", got, ok)
+	got, f := c.Get(key)
+	if f != Fresh || string(got.Body) != "hello" {
+		t.Fatalf("want fresh hello, got %v %v", got, f)
 	}
 }
 
@@ -37,18 +37,41 @@ func TestExpiry(t *testing.T) {
 	o := obj("x", time.Minute)
 	o.StoredAt = time.Now().Add(-2 * time.Minute)
 	c.Set(key, o)
-	if _, ok := c.Get(key); ok {
-		t.Fatal("expired object served")
+	if _, f := c.Get(key); f != Miss {
+		t.Fatal("expired object without a stale window was served")
+	}
+}
+
+func TestStaleWindow(t *testing.T) {
+	c := New(1 << 20)
+	key := Key("example.com", "GET", "/a", "")
+
+	o := obj("x", time.Minute)
+	o.StaleFor = 10 * time.Minute
+	o.StoredAt = time.Now().Add(-2 * time.Minute)
+	c.Set(key, o)
+	got, f := c.Get(key)
+	if f != Stale || string(got.Body) != "x" {
+		t.Fatalf("want stale x within window, got %v %v", got, f)
+	}
+
+	// Past TTL + stale window: gone entirely.
+	o2 := obj("y", time.Minute)
+	o2.StaleFor = 10 * time.Minute
+	o2.StoredAt = time.Now().Add(-12 * time.Minute)
+	c.Set(key, o2)
+	if _, f := c.Get(key); f != Miss {
+		t.Fatal("object served past its stale window")
 	}
 }
 
 func TestKeyIsolation(t *testing.T) {
 	c := New(1 << 20)
 	c.Set(Key("a.com", "GET", "/x", ""), obj("from-a", time.Minute))
-	if _, ok := c.Get(Key("b.com", "GET", "/x", "")); ok {
+	if _, f := c.Get(Key("b.com", "GET", "/x", "")); f != Miss {
 		t.Fatal("cache leaked an object across hosts")
 	}
-	if _, ok := c.Get(Key("a.com", "GET", "/x", "gzip")); ok {
+	if _, f := c.Get(Key("a.com", "GET", "/x", "gzip")); f != Miss {
 		t.Fatal("cache leaked an object across encoding variants")
 	}
 }
@@ -72,7 +95,7 @@ func TestOversizeObjectRejected(t *testing.T) {
 	c := New(shardCount * 512)
 	key := Key("example.com", "GET", "/big", "")
 	c.Set(key, obj(string(make([]byte, 4096)), time.Minute))
-	if _, ok := c.Get(key); ok {
+	if _, f := c.Get(key); f != Miss {
 		t.Fatal("object larger than a shard budget was admitted")
 	}
 }

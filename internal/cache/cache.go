@@ -30,12 +30,35 @@ type Object struct {
 	Body     []byte
 	StoredAt time.Time
 	TTL      time.Duration
+	// StaleFor extends the object's life past TTL: within that window it
+	// is still served (marked stale) while a background revalidation
+	// replaces it. Zero means the object is evicted right at TTL.
+	StaleFor time.Duration
 }
 
 // Expired reports whether the object outlived its TTL.
 func (o *Object) Expired(now time.Time) bool {
 	return now.After(o.StoredAt.Add(o.TTL))
 }
+
+// evictable reports whether the object outlived TTL plus its stale window
+// and must not be served at all anymore.
+func (o *Object) evictable(now time.Time) bool {
+	return now.After(o.StoredAt.Add(o.TTL + o.StaleFor))
+}
+
+// Freshness classifies a cache lookup result.
+type Freshness int
+
+const (
+	// Miss: no serveable entry.
+	Miss Freshness = iota
+	// Fresh: entry within its TTL.
+	Fresh
+	// Stale: entry past its TTL but within its stale window; callers
+	// should serve it and revalidate in the background.
+	Stale
+)
 
 // Age returns the object's current age, for the Age response header.
 func (o *Object) Age(now time.Time) time.Duration {
@@ -127,29 +150,36 @@ func hexByte(b byte) int {
 	return int(b - '0')
 }
 
-// Get returns the cached object for key if present and fresh.
-func (c *Cache) Get(key string) (*Object, bool) {
+// Get returns the cached object for key and how fresh it is. Stale objects
+// (past TTL, within their stale window) are returned so callers can serve
+// them while revalidating; fully expired objects are evicted and reported
+// as a miss.
+func (c *Cache) Get(key string) (*Object, Freshness) {
 	s := c.shardFor(key)
 	s.mu.Lock()
 	e, ok := s.items[key]
 	if !ok {
 		s.mu.Unlock()
 		c.misses.Add(1)
-		return nil, false
+		return nil, Miss
 	}
-	if e.obj.Expired(time.Now()) {
+	now := time.Now()
+	if e.obj.evictable(now) {
 		s.removeLocked(e)
 		s.mu.Unlock()
 		c.entries.Add(-1)
 		c.bytes.Add(-e.size)
 		c.misses.Add(1)
-		return nil, false
+		return nil, Miss
 	}
 	s.lru.MoveToFront(e.elem)
 	obj := e.obj
 	s.mu.Unlock()
 	c.hits.Add(1)
-	return obj, true
+	if obj.Expired(now) {
+		return obj, Stale
+	}
+	return obj, Fresh
 }
 
 // Set stores obj under key, evicting LRU entries as needed. Objects larger

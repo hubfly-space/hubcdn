@@ -56,6 +56,7 @@ just falls back to the default for that key.
 | --- | --- | --- | --- |
 | `cache` | `off`, `standard`, `aggressive` | `standard` | Caching mode — see [caching.md](caching.md) |
 | `ttl` | Go duration (`90s`, `6h`) or bare seconds (`3600`) | `1h` | TTL for responses without origin freshness headers |
+| `swr` | duration or seconds; `0` disables | `10m` | Stale-while-revalidate window: expired entries are served instantly while refreshed in the background |
 | `websocket` | `on`, `off` | `on` | Allow WebSocket/Upgrade tunneling |
 | `preserve_host` | `on`, `off` | `on` | `on` sends the visitor's Host header to the origin; `off` sends the origin's own hostname |
 | `max_object` | size (`16mb`, `512kb`) | node limit | Largest response body cached for this domain (cannot exceed the node's limit) |
