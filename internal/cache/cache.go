@@ -182,14 +182,20 @@ func (c *Cache) Get(key string) (*Object, Freshness) {
 	return obj, Fresh
 }
 
-// Set stores obj under key, evicting LRU entries as needed. Objects larger
-// than the whole per-shard budget are silently rejected.
+// Set stores obj under key, evicting LRU entries in its shard as needed.
+// Only objects bigger than the entire cache budget are rejected — a large
+// but legitimate object (a big image, an unresized photo) is admitted even
+// if it alone exceeds its shard's usual fair share of the budget; that
+// shard simply runs over its nominal share until enough of its own entries
+// age out, which is far preferable to silently never caching the object at
+// all (see cache_test.go: TestLargeObjectAdmittedOverShardShare).
 func (c *Cache) Set(key string, obj *Object) {
 	size := obj.size()
-	shardBudget := c.budget.Load() / shardCount
-	if shardBudget <= 0 || size > shardBudget {
+	budget := c.budget.Load()
+	if budget <= 0 || size > budget {
 		return
 	}
+	shardBudget := budget / shardCount
 	s := c.shardFor(key)
 	s.mu.Lock()
 	if old, ok := s.items[key]; ok {
@@ -203,7 +209,7 @@ func (c *Cache) Set(key string, obj *Object) {
 	s.bytes += size
 	c.entries.Add(1)
 	c.bytes.Add(size)
-	c.evictOverLocked(s, shardBudget)
+	c.evictOverLocked(s, shardBudget, e)
 	s.mu.Unlock()
 }
 
@@ -229,7 +235,7 @@ func (c *Cache) SetBudget(budget int64) {
 	shardBudget := budget / shardCount
 	for _, s := range c.shards {
 		s.mu.Lock()
-		c.evictOverLocked(s, shardBudget)
+		c.evictOverLocked(s, shardBudget, nil)
 		s.mu.Unlock()
 	}
 }
@@ -249,13 +255,22 @@ func (c *Cache) Stats() Stats {
 	}
 }
 
-func (c *Cache) evictOverLocked(s *shard, shardBudget int64) {
+// evictOverLocked evicts LRU entries until the shard is back under budget.
+// protect, when non-nil, is never evicted — used right after Set() inserts
+// an object bigger than the shard's fair share: without this, once every
+// other entry in the shard is gone the loop would reach the very entry it
+// just inserted and evict that too, so the object could never actually
+// stay cached.
+func (c *Cache) evictOverLocked(s *shard, shardBudget int64, protect *entry) {
 	for s.bytes > shardBudget {
 		back := s.lru.Back()
 		if back == nil {
 			return
 		}
 		e := back.Value.(*entry)
+		if e == protect {
+			return
+		}
 		s.removeLocked(e)
 		c.entries.Add(-1)
 		c.bytes.Add(-e.size)

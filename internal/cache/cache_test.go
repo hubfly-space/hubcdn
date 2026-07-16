@@ -91,12 +91,35 @@ func TestBudgetEviction(t *testing.T) {
 	}
 }
 
-func TestOversizeObjectRejected(t *testing.T) {
-	c := New(shardCount * 512)
-	key := Key("example.com", "GET", "/big", "")
-	c.Set(key, obj(string(make([]byte, 4096)), time.Minute))
+// TestLargeObjectAdmittedOverShardShare guards against the bug where any
+// object bigger than budget/shardCount (a shard's "fair share") was
+// silently dropped from the cache even though the aggregate cache had
+// plenty of room — e.g. a small VPS with a ~700MB budget gives each of the
+// 256 shards only ~2.7MB, which a single unresized photo can easily
+// exceed. Such an object must still be cached, and retrievable, as long as
+// it fits under the *total* budget.
+func TestLargeObjectAdmittedOverShardShare(t *testing.T) {
+	budget := int64(64 << 20) // 64MB total, so ~256KB per shard
+	c := New(budget)
+	big := make([]byte, 4<<20) // 4MB: far more than one shard's fair share
+	key := Key("example.com", "GET", "/photo.jpg", "")
+	c.Set(key, obj(string(big), time.Minute))
+
+	got, f := c.Get(key)
+	if f != Fresh {
+		t.Fatalf("large-but-under-total-budget object was not cached, freshness=%v", f)
+	}
+	if len(got.Body) != len(big) {
+		t.Fatalf("body truncated: got %d bytes, want %d", len(got.Body), len(big))
+	}
+}
+
+func TestObjectBiggerThanTotalBudgetRejected(t *testing.T) {
+	c := New(1 << 20) // 1MB total
+	key := Key("example.com", "GET", "/huge", "")
+	c.Set(key, obj(string(make([]byte, 2<<20)), time.Minute)) // 2MB, over budget
 	if _, f := c.Get(key); f != Miss {
-		t.Fatal("object larger than a shard budget was admitted")
+		t.Fatal("object bigger than the entire cache budget was admitted")
 	}
 }
 

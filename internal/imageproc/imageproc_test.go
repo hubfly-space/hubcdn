@@ -77,6 +77,45 @@ func TestResizeWidthKeepsAspect(t *testing.T) {
 	}
 }
 
+func TestDefaultCapsLargeSourceWithNoExplicitSize(t *testing.T) {
+	src := encodePNG(t, testImage(3000, 2000)) // no w=/h= requested at all
+	res, err := Transform(src, Defaults())
+	if err != nil {
+		t.Fatal(err)
+	}
+	w, h, _ := decodeDims(t, res.Data)
+	if w != defaultMaxDim {
+		t.Fatalf("got %dx%d, want longest side capped to %d", w, h, defaultMaxDim)
+	}
+	if h != defaultMaxDim*2000/3000 {
+		t.Fatalf("aspect ratio not preserved: got %dx%d", w, h)
+	}
+}
+
+func TestDefaultDoesNotTouchAlreadySmallImages(t *testing.T) {
+	src := encodePNG(t, testImage(400, 200))
+	res, err := Transform(src, Defaults())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w, h, _ := decodeDims(t, res.Data); w != 400 || h != 200 {
+		t.Fatalf("small image resized under the default cap: got %dx%d", w, h)
+	}
+}
+
+func TestExplicitWidthOverridesDefaultCap(t *testing.T) {
+	src := encodePNG(t, testImage(3000, 2000))
+	p := Defaults()
+	p.Width = 3000 // explicitly ask for the full original width
+	res, err := Transform(src, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w, _, _ := decodeDims(t, res.Data); w != 3000 {
+		t.Fatalf("explicit width was overridden by the default cap: got %d, want 3000", w)
+	}
+}
+
 func TestScaleDownNeverUpscales(t *testing.T) {
 	src := encodePNG(t, testImage(100, 50))
 	p := Defaults()
