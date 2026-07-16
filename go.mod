@@ -6,7 +6,7 @@ require (
 	github.com/a-h/templ v0.3.865
 	github.com/caddyserver/certmagic v0.23.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/net v0.54.0
+	golang.org/x/net v0.55.0
 )
 
 require (
