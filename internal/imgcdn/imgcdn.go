@@ -28,6 +28,7 @@ import (
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
 	"github.com/hubfly-space/hubcdn/internal/imageproc"
+	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
 
 const (
@@ -128,6 +129,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var he *httpError
 		if errors.As(err, &he) {
+			if he.status == http.StatusNotFound {
+				h.serveNotFound(w, r)
+				return
+			}
 			http.Error(w, "hubCDN images: "+he.msg, he.status)
 			return
 		}
@@ -208,6 +213,9 @@ func (h *Handler) fetch(ctx context.Context, src *url.URL) ([]byte, error) {
 		return nil, fmt.Errorf("fetching source: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &httpError{http.StatusNotFound, "source image not found"}
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, &httpError{http.StatusBadGateway,
 			fmt.Sprintf("source responded with status %d", resp.StatusCode)}
@@ -223,6 +231,22 @@ func (h *Handler) fetch(ctx context.Context, src *url.URL) ([]byte, error) {
 		return nil, &httpError{http.StatusRequestEntityTooLarge, "source image exceeds the 20 MB limit"}
 	}
 	return data, nil
+}
+
+// serveNotFound responds to a missing source image with hubCDN's branded
+// placeholder instead of a bare error, so a broken image URL renders as an
+// actual image wherever the /img/ URL is embedded (an <img> tag doesn't fall
+// back to plain text). Never cached: the source may start existing on a
+// later request.
+func (h *Handler) serveNotFound(w http.ResponseWriter, r *http.Request) {
+	hdr := w.Header()
+	hdr.Set("Content-Type", "image/webp")
+	hdr.Set("Cache-Control", "no-store")
+	hdr.Set("Content-Length", strconv.Itoa(len(static.NotFound)))
+	w.WriteHeader(http.StatusNotFound)
+	if r.Method != http.MethodHead {
+		_, _ = w.Write(static.NotFound)
+	}
 }
 
 func (h *Handler) serve(w http.ResponseWriter, r *http.Request, key string, obj *cache.Object, status string) {
