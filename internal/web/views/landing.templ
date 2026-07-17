@@ -16,7 +16,7 @@ templ Landing(hostname string, ips []string) {
 			@sitePane(hostname, ips)
 		</section>
 		<section class="pane pane-img">
-			@imagePane()
+			@imagePane(hostname, ips)
 		</section>
 	}
 }
@@ -71,14 +71,13 @@ templ sitePane(hostname string, ips []string) {
 	@resultsSection()
 }
 
-templ imagePane() {
+templ imagePane(hostname string, ips []string) {
 	<div class="badge">direct caching — no DNS needed</div>
 	<h1>Optimize any image through <span>hubCDN</span></h1>
 	<p class="lead">
 		Wrap any public image URL and get back a compressed, resized,
 		edge-cached copy. No DNS changes, no signup — just a URL.
 	</p>
-	@imageExample()
 	<h2>URL format</h2>
 	<pre class="record">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre>
 	<pre class="record">/img/<b>w=800,q=75,f=jpeg</b>/https://your-site.com/photo.jpg</pre>
@@ -163,14 +162,38 @@ templ imagePane() {
 		request — so hotlinking these URLs is always safe. Animated GIFs are
 		passed through untouched.
 	</div>
+	@imageExample(hostname, ips)
 }
 
-templ imageExample() {
+// exampleImageURL is the source photo used for the live example below:
+// large enough (24 megapixels) to make the size difference obvious.
+const exampleImageURL = "http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg"
+
+// exampleOptimizedPath is the /img/ path used for the live example,
+// relative to this node.
+const exampleOptimizedPath = "/img/w=600/" + exampleImageURL
+
+// exampleOptimizedURL resolves exampleOptimizedPath into a full, absolute
+// URL against the node's own hostname (or its first public IP, if no
+// hostname is configured) so visitors can open or copy it directly instead
+// of only seeing a path relative to this page.
+func exampleOptimizedURL(hostname string, ips []string) string {
+	switch {
+	case hostname != "":
+		return "https://" + hostname + exampleOptimizedPath
+	case len(ips) > 0:
+		return "https://" + ips[0] + exampleOptimizedPath
+	default:
+		return exampleOptimizedPath
+	}
+}
+
+templ imageExample(hostname string, ips []string) {
 	<div class="results">
 		<p class="results-title">Real example: <b>110x smaller</b>, automatically</p>
 		<img
 			class="example"
-			src="/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg"
+			src={ exampleOptimizedPath }
 			alt="Photo optimized live through hubCDN's image endpoint"
 			loading="lazy"
 		/>
@@ -193,7 +216,9 @@ templ imageExample() {
 			source (a few seconds, since this source is large); every request
 			after that is served instantly from cache.
 		</p>
-		<pre class="record">/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg</pre>
+		<p class="muted">Test it yourself — open either link directly:</p>
+		<pre class="record">Original:  <a href={ templ.URL(exampleImageURL) } target="_blank" rel="noopener">{ exampleImageURL }</a></pre>
+		<pre class="record">Optimized: <a href={ templ.URL(exampleOptimizedURL(hostname, ips)) } target="_blank" rel="noopener">{ exampleOptimizedURL(hostname, ips) }</a></pre>
 	</div>
 }
 

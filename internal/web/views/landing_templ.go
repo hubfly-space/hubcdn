@@ -57,7 +57,7 @@ func Landing(hostname string, ips []string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = imagePane().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = imagePane(hostname, ips).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -188,7 +188,7 @@ func sitePane(hostname string, ips []string) templ.Component {
 	})
 }
 
-func imagePane() templ.Component {
+func imagePane(hostname string, ips []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -209,15 +209,11 @@ func imagePane() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"badge\">direct caching — no DNS needed</div><h1>Optimize any image through <span>hubCDN</span></h1><p class=\"lead\">Wrap any public image URL and get back a compressed, resized, edge-cached copy. No DNS changes, no signup — just a URL.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"badge\">direct caching — no DNS needed</div><h1>Optimize any image through <span>hubCDN</span></h1><p class=\"lead\">Wrap any public image URL and get back a compressed, resized, edge-cached copy. No DNS changes, no signup — just a URL.</p><h2>URL format</h2><pre class=\"record\">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre><pre class=\"record\">/img/<b>w=800,q=75,f=jpeg</b>/https://your-site.com/photo.jpg</pre><p>Options are comma-separated <code>key=value</code> pairs. A single <code>_</code> applies the defaults: re-encode at quality 80 with metadata stripped.</p><h2>Try it</h2><div class=\"builder\"><label for=\"b-src\">Image URL</label> <input type=\"text\" id=\"b-src\" placeholder=\"https://your-site.com/photo.jpg\" autocomplete=\"off\"><div class=\"row\"><div><label for=\"b-w\">Width (px)</label> <input type=\"number\" id=\"b-w\" min=\"1\" max=\"4096\" placeholder=\"auto\"></div><div><label for=\"b-q\">Quality (1–100)</label> <input type=\"number\" id=\"b-q\" min=\"1\" max=\"100\" placeholder=\"80\"></div><div><label for=\"b-f\">Format</label> <select id=\"b-f\"><option value=\"\">auto</option> <option value=\"jpeg\">jpeg</option> <option value=\"png\">png</option> <option value=\"gif\">gif</option></select></div></div><div class=\"out\" id=\"b-out\">Your optimized URL appears here.</div><img class=\"preview\" id=\"b-prev\" alt=\"optimized preview\" loading=\"lazy\"></div><script>\n\t\t(function () {\n\t\t\tvar src = document.getElementById('b-src');\n\t\t\tvar wIn = document.getElementById('b-w');\n\t\t\tvar qIn = document.getElementById('b-q');\n\t\t\tvar fIn = document.getElementById('b-f');\n\t\t\tvar out = document.getElementById('b-out');\n\t\t\tvar prev = document.getElementById('b-prev');\n\t\t\tfunction build() {\n\t\t\t\tvar u = src.value.trim();\n\t\t\t\tif (!u) {\n\t\t\t\t\tout.textContent = 'Your optimized URL appears here.';\n\t\t\t\t\tprev.style.display = 'none';\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar opts = [];\n\t\t\t\tif (wIn.value) opts.push('w=' + wIn.value);\n\t\t\t\tif (qIn.value) opts.push('q=' + qIn.value);\n\t\t\t\tif (fIn.value) opts.push('f=' + fIn.value);\n\t\t\t\tvar full = location.origin + '/img/' + (opts.length ? opts.join(',') : '_') + '/' + u;\n\t\t\t\tout.textContent = full;\n\t\t\t\tprev.src = full;\n\t\t\t\tprev.style.display = 'block';\n\t\t\t}\n\t\t\t[src, wIn, qIn, fIn].forEach(function (el) {\n\t\t\t\tel.addEventListener('input', build);\n\t\t\t\tel.addEventListener('change', build);\n\t\t\t});\n\t\t})();\n\t</script><h2>All options</h2><table><tr><th>Key</th><th>Values</th><th>Effect</th></tr><tr><td><code>w</code>, <code>h</code></td><td>1–4096</td><td>Resize; one dimension keeps aspect ratio</td></tr><tr><td><code>fit</code></td><td><code>scaledown</code> · <code>contain</code> · <code>cover</code> · <code>fill</code></td><td>How the image maps into w×h (<code>cover</code> center-crops)</td></tr><tr><td><code>dpr</code></td><td>0.5–3</td><td>Device pixel ratio multiplier for w/h</td></tr><tr><td><code>q</code></td><td>1–100</td><td>JPEG quality (default 80)</td></tr><tr><td><code>f</code></td><td><code>auto</code> · <code>jpeg</code> · <code>png</code> · <code>gif</code></td><td>Output format; <code>auto</code> keeps transparency in PNG</td></tr><tr><td><code>gray</code></td><td><code>on</code></td><td>Grayscale</td></tr><tr><td><code>blur</code></td><td>1–50</td><td>Blur radius</td></tr><tr><td><code>flip</code></td><td><code>h</code> · <code>v</code> · <code>hv</code></td><td>Mirror horizontally / vertically</td></tr><tr><td><code>_</code></td><td>—</td><td>No options: just compress &amp; strip metadata</td></tr></table><div class=\"notice\"><strong>Retention:</strong> optimized images stay cached for up to 7&nbsp;days. When the node fills up, the least-recently-used images are purged automatically and simply re-optimized on their next request — so hotlinking these URLs is always safe. Animated GIFs are passed through untouched.</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = imageExample().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<h2>URL format</h2><pre class=\"record\">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre><pre class=\"record\">/img/<b>w=800,q=75,f=jpeg</b>/https://your-site.com/photo.jpg</pre><p>Options are comma-separated <code>key=value</code> pairs. A single <code>_</code> applies the defaults: re-encode at quality 80 with metadata stripped.</p><h2>Try it</h2><div class=\"builder\"><label for=\"b-src\">Image URL</label> <input type=\"text\" id=\"b-src\" placeholder=\"https://your-site.com/photo.jpg\" autocomplete=\"off\"><div class=\"row\"><div><label for=\"b-w\">Width (px)</label> <input type=\"number\" id=\"b-w\" min=\"1\" max=\"4096\" placeholder=\"auto\"></div><div><label for=\"b-q\">Quality (1–100)</label> <input type=\"number\" id=\"b-q\" min=\"1\" max=\"100\" placeholder=\"80\"></div><div><label for=\"b-f\">Format</label> <select id=\"b-f\"><option value=\"\">auto</option> <option value=\"jpeg\">jpeg</option> <option value=\"png\">png</option> <option value=\"gif\">gif</option></select></div></div><div class=\"out\" id=\"b-out\">Your optimized URL appears here.</div><img class=\"preview\" id=\"b-prev\" alt=\"optimized preview\" loading=\"lazy\"></div><script>\n\t\t(function () {\n\t\t\tvar src = document.getElementById('b-src');\n\t\t\tvar wIn = document.getElementById('b-w');\n\t\t\tvar qIn = document.getElementById('b-q');\n\t\t\tvar fIn = document.getElementById('b-f');\n\t\t\tvar out = document.getElementById('b-out');\n\t\t\tvar prev = document.getElementById('b-prev');\n\t\t\tfunction build() {\n\t\t\t\tvar u = src.value.trim();\n\t\t\t\tif (!u) {\n\t\t\t\t\tout.textContent = 'Your optimized URL appears here.';\n\t\t\t\t\tprev.style.display = 'none';\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar opts = [];\n\t\t\t\tif (wIn.value) opts.push('w=' + wIn.value);\n\t\t\t\tif (qIn.value) opts.push('q=' + qIn.value);\n\t\t\t\tif (fIn.value) opts.push('f=' + fIn.value);\n\t\t\t\tvar full = location.origin + '/img/' + (opts.length ? opts.join(',') : '_') + '/' + u;\n\t\t\t\tout.textContent = full;\n\t\t\t\tprev.src = full;\n\t\t\t\tprev.style.display = 'block';\n\t\t\t}\n\t\t\t[src, wIn, qIn, fIn].forEach(function (el) {\n\t\t\t\tel.addEventListener('input', build);\n\t\t\t\tel.addEventListener('change', build);\n\t\t\t});\n\t\t})();\n\t</script><h2>All options</h2><table><tr><th>Key</th><th>Values</th><th>Effect</th></tr><tr><td><code>w</code>, <code>h</code></td><td>1–4096</td><td>Resize; one dimension keeps aspect ratio</td></tr><tr><td><code>fit</code></td><td><code>scaledown</code> · <code>contain</code> · <code>cover</code> · <code>fill</code></td><td>How the image maps into w×h (<code>cover</code> center-crops)</td></tr><tr><td><code>dpr</code></td><td>0.5–3</td><td>Device pixel ratio multiplier for w/h</td></tr><tr><td><code>q</code></td><td>1–100</td><td>JPEG quality (default 80)</td></tr><tr><td><code>f</code></td><td><code>auto</code> · <code>jpeg</code> · <code>png</code> · <code>gif</code></td><td>Output format; <code>auto</code> keeps transparency in PNG</td></tr><tr><td><code>gray</code></td><td><code>on</code></td><td>Grayscale</td></tr><tr><td><code>blur</code></td><td>1–50</td><td>Blur radius</td></tr><tr><td><code>flip</code></td><td><code>h</code> · <code>v</code> · <code>hv</code></td><td>Mirror horizontally / vertically</td></tr><tr><td><code>_</code></td><td>—</td><td>No options: just compress &amp; strip metadata</td></tr></table><div class=\"notice\"><strong>Retention:</strong> optimized images stay cached for up to 7&nbsp;days. When the node fills up, the least-recently-used images are purged automatically and simply re-optimized on their next request — so hotlinking these URLs is always safe. Animated GIFs are passed through untouched.</div>")
+		templ_7745c5c3_Err = imageExample(hostname, ips).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -225,7 +221,30 @@ func imagePane() templ.Component {
 	})
 }
 
-func imageExample() templ.Component {
+// exampleImageURL is the source photo used for the live example below:
+// large enough (24 megapixels) to make the size difference obvious.
+const exampleImageURL = "http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg"
+
+// exampleOptimizedPath is the /img/ path used for the live example,
+// relative to this node.
+const exampleOptimizedPath = "/img/w=600/" + exampleImageURL
+
+// exampleOptimizedURL resolves exampleOptimizedPath into a full, absolute
+// URL against the node's own hostname (or its first public IP, if no
+// hostname is configured) so visitors can open or copy it directly instead
+// of only seeing a path relative to this page.
+func exampleOptimizedURL(hostname string, ips []string) string {
+	switch {
+	case hostname != "":
+		return "https://" + hostname + exampleOptimizedPath
+	case len(ips) > 0:
+		return "https://" + ips[0] + exampleOptimizedPath
+	default:
+		return exampleOptimizedPath
+	}
+}
+
+func imageExample(hostname string, ips []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -246,7 +265,72 @@ func imageExample() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"results\"><p class=\"results-title\">Real example: <b>110x smaller</b>, automatically</p><img class=\"example\" src=\"/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg\" alt=\"Photo optimized live through hubCDN's image endpoint\" loading=\"lazy\"><table><tr><th>Metric</th><th>Original</th><th>Through hubCDN</th></tr><tr><td>File size</td><td>3.7 MB</td><td><strong>34 KB</strong></td></tr><tr><td>Dimensions</td><td>6000×4000</td><td><strong>600×400</strong></td></tr><tr><td>Format</td><td>JPEG, untouched</td><td>JPEG, quality 80, no metadata</td></tr></table><p class=\"muted\">That preview above is this exact photo, live, resized with <code>w=600</code> — <strong>99% smaller (110x)</strong>. Even with zero options at all (<code>/img/_/&lt;url&gt;</code>), just the default 2048px cap and re-encode alone takes it from 3.7&nbsp;MB down to <strong>247&nbsp;KB</strong> — a 93% reduction — with no configuration whatsoever.</p><p class=\"muted\">The first request pays a one-time cost to fetch and optimize the source (a few seconds, since this source is large); every request after that is served instantly from cache.</p><pre class=\"record\">/img/w=600/http://origin-dummy-web.uhost.pro/arnaud-padalle-9a8GgZPWnqU-unsplash.jpg</pre></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"results\"><p class=\"results-title\">Real example: <b>110x smaller</b>, automatically</p><img class=\"example\" src=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(exampleOptimizedPath)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 196, Col: 29}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" alt=\"Photo optimized live through hubCDN's image endpoint\" loading=\"lazy\"><table><tr><th>Metric</th><th>Original</th><th>Through hubCDN</th></tr><tr><td>File size</td><td>3.7 MB</td><td><strong>34 KB</strong></td></tr><tr><td>Dimensions</td><td>6000×4000</td><td><strong>600×400</strong></td></tr><tr><td>Format</td><td>JPEG, untouched</td><td>JPEG, quality 80, no metadata</td></tr></table><p class=\"muted\">That preview above is this exact photo, live, resized with <code>w=600</code> — <strong>99% smaller (110x)</strong>. Even with zero options at all (<code>/img/_/&lt;url&gt;</code>), just the default 2048px cap and re-encode alone takes it from 3.7&nbsp;MB down to <strong>247&nbsp;KB</strong> — a 93% reduction — with no configuration whatsoever.</p><p class=\"muted\">The first request pays a one-time cost to fetch and optimize the source (a few seconds, since this source is large); every request after that is served instantly from cache.</p><p class=\"muted\">Test it yourself — open either link directly:</p><pre class=\"record\">Original:  <a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 templ.SafeURL
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(exampleImageURL))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 220, Col: 69}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" target=\"_blank\" rel=\"noopener\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(exampleImageURL)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 220, Col: 120}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</a></pre><pre class=\"record\">Optimized: <a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 templ.SafeURL
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(exampleOptimizedURL(hostname, ips)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 221, Col: 88}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" target=\"_blank\" rel=\"noopener\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var13 string
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(exampleOptimizedURL(hostname, ips))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 221, Col: 158}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</a></pre></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -270,12 +354,12 @@ func resultsSection() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"results\"><p class=\"results-title\">Results: <b>dummy-web.uhost.pro</b> is faster</p><table><tr><th>Metric</th><th>dummy-web.uhost.pro</th><th>origin-dummy-web.uhost.pro</th></tr><tr><td>Avg. first byte (TTFB)</td><td><strong>0.595s</strong></td><td>1.153s</td></tr><tr><td>Avg. total time</td><td><strong>0.702s</strong></td><td>1.153s</td></tr><tr><td>Response size</td><td>12,881 bytes</td><td>12,881 bytes</td></tr></table><p class=\"muted\"><b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to first byte than the origin — served from hubCDN's edge cache instead of round-tripping across continents on every request.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"results\"><p class=\"results-title\">Results: <b>dummy-web.uhost.pro</b> is faster</p><table><tr><th>Metric</th><th>dummy-web.uhost.pro</th><th>origin-dummy-web.uhost.pro</th></tr><tr><td>Avg. first byte (TTFB)</td><td><strong>0.595s</strong></td><td>1.153s</td></tr><tr><td>Avg. total time</td><td><strong>0.702s</strong></td><td>1.153s</td></tr><tr><td>Response size</td><td>12,881 bytes</td><td>12,881 bytes</td></tr></table><p class=\"muted\"><b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to first byte than the origin — served from hubCDN's edge cache instead of round-tripping across continents on every request.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -299,12 +383,12 @@ func configReference() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var10 == nil {
-			templ_7745c5c3_Var10 = templ.NopComponent
+		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var15 == nil {
+			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
