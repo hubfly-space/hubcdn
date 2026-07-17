@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
 
 func pngBytes(t *testing.T, w, h int) []byte {
@@ -142,6 +143,28 @@ func TestNonImageSourceIs415(t *testing.T) {
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusUnsupportedMediaType {
 		t.Fatalf("want 415, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestMissingSourceServesBrandedNotFound(t *testing.T) {
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	defer origin.Close()
+
+	h := testHandler()
+	r := httptest.NewRequest(http.MethodGet, "https://cdn.example/img/_/"+origin.URL+"/missing.png", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("want 404, got %d", w.Code)
+	}
+	if ct := w.Header().Get("Content-Type"); ct != "image/webp" {
+		t.Fatalf("want image/webp, got %q", ct)
+	}
+	if !bytes.Equal(w.Body.Bytes(), static.NotFound) {
+		t.Fatal("body does not match the embedded not-found placeholder")
 	}
 }
 

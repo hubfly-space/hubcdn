@@ -7,6 +7,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -32,6 +33,7 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/imgcdn"
 	"github.com/hubfly-space/hubcdn/internal/proxy"
 	"github.com/hubfly-space/hubcdn/internal/web"
+	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
 
 // Server owns the HTTPS listener and all shared components.
@@ -325,6 +327,12 @@ func (s *Server) serveNode(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/", "/index.html":
 		web.RenderLanding(w, s.cfg.Hostname, s.cfg.PublicIPs)
+	case "/favicon.ico":
+		serveAsset(w, r, "image/x-icon", static.Favicon)
+	case "/apple-touch-icon.png":
+		serveAsset(w, r, "image/png", static.AppleTouchIcon)
+	case "/assets/mascot.webp":
+		serveAsset(w, r, "image/webp", static.Mascot)
 	case "/hubcdn/health":
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprintln(w, "ok")
@@ -333,6 +341,15 @@ func (s *Server) serveNode(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+// serveAsset writes one of the embedded brand assets. They are baked into
+// the binary at build time and never change at runtime, so they're safe to
+// cache for a long time client-side.
+func serveAsset(w http.ResponseWriter, r *http.Request, contentType string, data []byte) {
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "public, max-age=604800, immutable")
+	http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(data))
 }
 
 func (s *Server) serveStats(w http.ResponseWriter) {
