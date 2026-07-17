@@ -12,7 +12,7 @@ DEPLOY_HOST="${DEPLOY_HOST:-dev@192.168.1.3}"
 # Relative to the remote user's home directory. Not "~/hubcdn": a literal
 # "~" here would be tilde-expanded by the *local* shell (using the local
 # user's $HOME) before ssh ever sees it. A bare relative path avoids that
-# entirely — every ssh/rsync invocation below starts in the remote user's
+# entirely - every ssh/rsync invocation below starts in the remote user's
 # own home directory by default.
 DEPLOY_DIR="${DEPLOY_DIR:-hubcdn}"
 
@@ -85,7 +85,7 @@ fi
 ssh_remote "mkdir -p '${DEPLOY_DIR}'"
 
 echo "==> Syncing source tree"
-# Leading slashes anchor these to the repo root — unanchored patterns like
+# Leading slashes anchor these to the repo root - unanchored patterns like
 # 'hubcdn' would also match cmd/hubcdn/ (the source directory) and strip it
 # from the tree entirely.
 rsync -az --delete \

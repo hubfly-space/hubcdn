@@ -114,7 +114,7 @@ func TestAggressiveCachesDespiteCookies(t *testing.T) {
 		}
 	}
 	if n := hits.Load(); n != 1 {
-		t.Fatalf("origin hit %d times, want 1 — cookies must not bypass aggressive caching", n)
+		t.Fatalf("origin hit %d times, want 1 - cookies must not bypass aggressive caching", n)
 	}
 }
 

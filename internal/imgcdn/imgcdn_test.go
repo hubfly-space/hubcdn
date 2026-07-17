@@ -100,7 +100,7 @@ func TestInvalidOptionsRejected(t *testing.T) {
 // TestProductionClientRejectsPrivateHosts exercises the real, guarded
 // client (New with a nil client, as production wiring uses) against a
 // literal private-IP source. Confirms the explicit pre-flight check in
-// fetch() rejects it immediately — this is the check CodeQL's
+// fetch() rejects it immediately - this is the check CodeQL's
 // go/request-forgery query flags at the h.client.Do call site, so this
 // test is the evidence that the flagged sink is unreachable with a
 // non-public destination in the production configuration.

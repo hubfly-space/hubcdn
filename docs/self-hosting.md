@@ -4,7 +4,7 @@
 
 - A server with **port 443** reachable from the internet. hubCDN is
   TLS-only: certificates are issued via the TLS-ALPN-01 ACME challenge,
-  which validates entirely inside the TLS handshake on port 443 — no port
+  which validates entirely inside the TLS handshake on port 443 - no port
   80 is needed anywhere, and hubCDN never opens an HTTP listener.
 - A public IP (v4 and/or v6).
 - Optionally a hostname for the node itself (e.g. `cdn.example.net`) so
@@ -21,7 +21,7 @@ HUBCDN_HOSTNAME=cdn.example.net \
 ./hubcdn
 ```
 
-Start with `HUBCDN_ACME_STAGING=true` until you've verified the setup —
+Start with `HUBCDN_ACME_STAGING=true` until you've verified the setup -
 staging certificates are untrusted but don't consume production ACME quota.
 
 `HUBCDN_PUBLIC_IPS` is technically optional but **strongly recommended**:
@@ -38,20 +38,20 @@ suffixes; durations use Go syntax (`30s`, `5m`, `6h`).
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `HUBCDN_DATA_DIR` | `./data` | Certificates, domain registry, issuance counters |
-| `HUBCDN_HTTPS_ADDR` | `:443` | The (only) listener — hubCDN is TLS-only |
-| `HUBCDN_HOSTNAME` | — | This node's own hostname; serves the landing page |
-| `HUBCDN_PUBLIC_IPS` | — | Comma-separated public IPs of this node |
+| `HUBCDN_HTTPS_ADDR` | `:443` | The (only) listener - hubCDN is TLS-only |
+| `HUBCDN_HOSTNAME` | - | This node's own hostname; serves the landing page |
+| `HUBCDN_PUBLIC_IPS` | - | Comma-separated public IPs of this node |
 | `HUBCDN_RESOLVER` | system | DNS server (`host:port`) for all lookups |
 
 ### TLS / ACME
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `HUBCDN_ACME_EMAIL` | — | ACME account email (expiry notices) |
+| `HUBCDN_ACME_EMAIL` | - | ACME account email (expiry notices) |
 | `HUBCDN_ACME_STAGING` | `false` | Use Let's Encrypt staging |
 | `HUBCDN_ACME_CA` | LE production | Custom ACME directory URL |
-| `HUBCDN_ACME_DEBUG` | `false` | Verbose certmagic/acmez logging — order creation, challenge setup, authorization polling. Turn on when an issuance is stuck or failing without a logged reason |
-| `HUBCDN_CERTS_PER_APEX_PER_DAY` | `10` | Issuance budget — see [ssl.md](ssl.md) |
+| `HUBCDN_ACME_DEBUG` | `false` | Verbose certmagic/acmez logging - order creation, challenge setup, authorization polling. Turn on when an issuance is stuck or failing without a logged reason |
+| `HUBCDN_CERTS_PER_APEX_PER_DAY` | `10` | Issuance budget - see [ssl.md](ssl.md) |
 | `HUBCDN_CERTS_PER_APEX_PER_WEEK` | `30` | |
 | `HUBCDN_CERTS_GLOBAL_PER_HOUR` | `60` | |
 | `HUBCDN_CERTS_GLOBAL_PER_WEEK` | `1000` | |
@@ -75,8 +75,8 @@ suffixes; durations use Go syntax (`30s`, `5m`, `6h`).
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `HUBCDN_BUNNY_API_KEY` | — | Bunny.net API key; enables the integration |
-| `HUBCDN_BUNNY_ZONE_ID` | — | Bunny DNS zone ID containing `HUBCDN_HOSTNAME` |
+| `HUBCDN_BUNNY_API_KEY` | - | Bunny.net API key; enables the integration |
+| `HUBCDN_BUNNY_ZONE_ID` | - | Bunny DNS zone ID containing `HUBCDN_HOSTNAME` |
 
 ## systemd
 
@@ -108,10 +108,10 @@ WantedBy=multi-user.target
 ## Docker
 
 The image is a multi-stage build ending in `gcr.io/distroless/static-debian12:nonroot`
-— no shell, no package manager, non-root by default. The container listens
-on `:4403` (HTTPS only — there is no HTTP port) internally, which is
+- no shell, no package manager, non-root by default. The container listens
+on `:4403` (HTTPS only - there is no HTTP port) internally, which is
 unprivileged, so the container never needs `root` or `CAP_NET_BIND_SERVICE`.
-Map your real port 443 to it from outside — via `docker run -p`,
+Map your real port 443 to it from outside - via `docker run -p`,
 docker-compose, a firewall NAT rule, or a reverse proxy in front of it. Note
 that the TLS-ALPN-01 ACME challenge is always validated by the CA against
 port 443 specifically, so whatever you expose as "your public 443" must
@@ -141,12 +141,12 @@ make down                # stop
 (defaulting to the same `4403` as the container) and runs the container
 hardened: `read_only` root filesystem with a small `tmpfs` at `/tmp`,
 `cap_drop: ALL`, `no-new-privileges`, and bounded JSON log rotation. The
-port is configurable through `.env` — see [.env.example](../.env.example).
+port is configurable through `.env` - see [.env.example](../.env.example).
 
 ### Deploying
 
 `make deploy` rsyncs the source tree to a remote Docker host over SSH and
-runs `docker compose up -d --build` there — see `scripts/deploy.sh`. It
+runs `docker compose up -d --build` there - see `scripts/deploy.sh`. It
 targets `dev@192.168.1.3` by default and writes a `.env` with hubCDN's
 standard production values (`ops@hubcdn.space` / `41.186.167.39` /
 `cdn.hubcdn.space`) on first deploy only, so it never clobbers a `.env`
@@ -178,12 +178,12 @@ HUBCDN_BUNNY_ZONE_ID=12345 \
 Each node **upserts its A/AAAA records on startup**, re-asserts them every
 5 minutes, and **removes them on graceful shutdown**, so
 `cdn.example.net` always resolves to the set of live nodes and users'
-CNAMEs spread across the fleet. Nodes are independent — each issues its own
+CNAMEs spread across the fleet. Nodes are independent - each issues its own
 certificates and fills its own cache.
 
 In a fleet, set `HUBCDN_PUBLIC_IPS` on every node to the **union of all
 fleet IPs**. A user's CNAME resolves to any node in the set, and a TLS
-handshake can land on any of them — the points-at-us check passes as long
+handshake can land on any of them - the points-at-us check passes as long
 as the domain resolves to one of the listed addresses, so certificates are
 issued no matter which node handles the first request.
 

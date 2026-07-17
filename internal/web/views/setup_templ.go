@@ -70,7 +70,7 @@ func Setup(host, originRecord, configRecord string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " TXT    <b>\"https://origin.your-server.com\"</b></pre><p>Replace the value with the address of your actual server — a full URL (<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>) or a bare hostname, which defaults to HTTPS.</p><div class=\"notice\"><strong>Give it a few minutes.</strong> DNS changes aren't instant — most providers apply a new TXT record within a few minutes, though it can occasionally take longer depending on your provider and the record's TTL. There's nothing else to do here: this page checks automatically every 15&nbsp;seconds and refreshes itself, so just leave it open, or come back and reload shortly.</div><h2>Optional: caching &amp; behavior</h2><p>Tune this domain with a second TXT record:</p><pre class=\"record\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " TXT    <b>\"https://origin.your-server.com\"</b></pre><p>Replace the value with the address of your actual server - a full URL (<code>https://203.0.113.7</code>, <code>http://origin.example.com:8080</code>) or a bare hostname, which defaults to HTTPS.</p><div class=\"notice\"><strong>Give it a few minutes.</strong> DNS changes aren't instant - most providers apply a new TXT record within a few minutes, though it can occasionally take longer depending on your provider and the record's TTL. There's nothing else to do here: this page checks automatically every 15&nbsp;seconds and refreshes itself, so just leave it open, or come back and reload shortly.</div><h2>Optional: caching &amp; behavior</h2><p>Tune this domain with a second TXT record:</p><pre class=\"record\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -93,7 +93,7 @@ func Setup(host, originRecord, configRecord string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout(host+" — almost there", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout(host+" - almost there", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -174,13 +174,13 @@ func SetupError(host, originRecord, lastError string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</pre><div class=\"notice\">If you just changed this record, this may just be DNS propagation — it isn't always instant. hubCDN keeps retrying automatically, and this page refreshes on its own, so no action is needed yet.</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</pre><div class=\"notice\">If you just changed this record, this may just be DNS propagation - it isn't always instant. hubCDN keeps retrying automatically, and this page refreshes on its own, so no action is needed yet.</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout(host+" — configuration problem", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout(host+" - configuration problem", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

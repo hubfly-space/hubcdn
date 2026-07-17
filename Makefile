@@ -9,7 +9,7 @@ DEPLOY_HOST ?= dev@192.168.1.3
 # Relative to the remote user's home directory. Deliberately not "~/hubcdn":
 # bash tilde-expands VAR=value assignments locally using *your* $HOME before
 # the value ever reaches ssh, not the remote user's. A bare relative path
-# has no such ambiguity — non-interactive ssh commands always start in the
+# has no such ambiguity - non-interactive ssh commands always start in the
 # remote user's own home directory.
 DEPLOY_DIR  ?= hubcdn
 

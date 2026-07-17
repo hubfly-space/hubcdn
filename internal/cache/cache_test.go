@@ -94,7 +94,7 @@ func TestBudgetEviction(t *testing.T) {
 // TestLargeObjectAdmittedOverShardShare guards against the bug where any
 // object bigger than budget/shardCount (a shard's "fair share") was
 // silently dropped from the cache even though the aggregate cache had
-// plenty of room — e.g. a small VPS with a ~700MB budget gives each of the
+// plenty of room - e.g. a small VPS with a ~700MB budget gives each of the
 // 256 shards only ~2.7MB, which a single unresized photo can easily
 // exceed. Such an object must still be cached, and retrievable, as long as
 // it fits under the *total* budget.

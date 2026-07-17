@@ -9,7 +9,7 @@ import (
 
 // runHealthCheck is invoked as `hubcdn healthcheck`. hubCDN is TLS-only, and
 // on-demand issuance means a plain TLS handshake against 127.0.0.1 (no SNI
-// matching a real domain) can't complete — so liveness is a TCP-level check
+// matching a real domain) can't complete - so liveness is a TCP-level check
 // that the HTTPS listener is up and accepting connections, rather than an
 // HTTP request. That's all a container runtime needs to know the process
 // hasn't wedged (see the distroless final stage in the Dockerfile, which has

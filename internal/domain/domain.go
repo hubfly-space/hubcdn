@@ -1,7 +1,7 @@
 // Package domain tracks every customer domain served by the node: its
 // origin, its per-domain settings, and its lifecycle state. Domains are
-// discovered passively — the first request for an unknown host registers it
-// — and everything about them is declared in the owner's DNS zone, so there
+// discovered passively - the first request for an unknown host registers it
+// - and everything about them is declared in the owner's DNS zone, so there
 // are no accounts and no write API.
 package domain
 

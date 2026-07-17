@@ -204,7 +204,7 @@ func grayscale(img *image.NRGBA) {
 }
 
 // boxBlur applies two horizontal+vertical box-blur passes with the given
-// radius — a close, cheap approximation of a gaussian blur. All four
+// radius - a close, cheap approximation of a gaussian blur. All four
 // channels are blurred with a sliding window, so each pass is O(w*h)
 // regardless of radius.
 func boxBlur(img *image.NRGBA, radius int) {

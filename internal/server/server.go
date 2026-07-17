@@ -1,5 +1,5 @@
 // Package server wires every hubCDN component into a single HTTPS listener.
-// Every domain hubCDN serves — including its own landing page — is TLS
+// Every domain hubCDN serves - including its own landing page - is TLS
 // only; there is no plaintext HTTP anywhere. Certificates are issued
 // on-demand via the TLS-ALPN-01 ACME challenge, which is validated entirely
 // within the TLS handshake on the HTTPS port itself, so no separate HTTP
@@ -135,7 +135,7 @@ func (s *Server) setupTLS() error {
 	if s.cfg.ACMEDebug {
 		// certmagic's default logger runs at Info level, which silently
 		// drops most of the detail acmez logs while placing an ACME order
-		// (challenge setup, authorization polling) — and some failure
+		// (challenge setup, authorization polling) - and some failure
 		// paths in acmez only log at Error for structured ACME "problem"
 		// responses, so a plain network/timeout error can propagate all
 		// the way up without ever being logged. Debug level surfaces all
@@ -170,7 +170,7 @@ func (s *Server) setupTLS() error {
 
 // decideIssuance is the certificate gate. It runs before every new ACME
 // order and rejects hosts that do not point at this node or would blow the
-// issuance budgets — this is what keeps one abusive user with unlimited
+// issuance budgets - this is what keeps one abusive user with unlimited
 // subdomains from exhausting the CA's weekly rate limit for everyone.
 func (s *Server) decideIssuance(ctx context.Context, name string) error {
 	name = strings.ToLower(name)

@@ -10,7 +10,7 @@ provisioned ahead of time.
 1. **Handshake for an unknown host** → the issuance gate runs (below). If it
    passes, an ACME order is placed and answered with the **TLS-ALPN-01**
    challenge, which the CA validates entirely within the TLS handshake on
-   port 443 — hubCDN is TLS-only and never opens an HTTP port (HTTP-01 is
+   port 443 - hubCDN is TLS-only and never opens an HTTP port (HTTP-01 is
    explicitly disabled). The only network requirement is that your public
    port 443 reaches this node's HTTPS listener.
 2. **Certificates are cached in memory and persisted** under
@@ -18,20 +18,20 @@ provisioned ahead of time.
 3. **Renewal is automatic.** certmagic renews in the background well before
    expiry; an expired or expiring certificate is re-issued without any
    action from the domain owner. Renewals are *exempt* from the issuance
-   budgets — an abusive apex can be stopped from getting new certificates,
+   budgets - an abusive apex can be stopped from getting new certificates,
    but existing sites always keep renewing.
 
 ## The issuance gate
 
 Every new order must pass, in this sequence:
 
-1. **Host validation** — syntactically valid public DNS name; no IPs, no
+1. **Host validation** - syntactically valid public DNS name; no IPs, no
    single-label hosts.
-2. **Points-at-us check** — when `HUBCDN_PUBLIC_IPS` is set, the host's
+2. **Points-at-us check** - when `HUBCDN_PUBLIC_IPS` is set, the host's
    A/AAAA records must resolve to one of this node's addresses. This stops
    third parties from requesting certificates for domains that never
    delegated to you. **Always set this in production.**
-3. **Issuance budgets** (`internal/certguard`) — sliding-window counters,
+3. **Issuance budgets** (`internal/certguard`) - sliding-window counters,
    persisted to `<data-dir>/certguard.json` so restarts don't reset them:
 
 | Budget | Env var | Default |
@@ -52,7 +52,7 @@ handled correctly via the public-suffix list.
 Let's Encrypt allows **50 new certificates per registered domain per week**
 plus account-wide order limits. A single user pointing a wildcard's worth of
 subdomains (`a.`, `b.`, `c.`, …) at your node would exhaust that within
-minutes — and once the CA limit is hit, *legitimate* subdomains of that apex
+minutes - and once the CA limit is hit, *legitimate* subdomains of that apex
 are blocked for a week, and enough abusive apexes could exhaust
 account-level limits for everyone. The per-apex weekly default (30) stays
 comfortably under the CA's 50 so there is always headroom left for renewals

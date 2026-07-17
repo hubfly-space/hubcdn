@@ -183,7 +183,7 @@ func (c *Cache) Get(key string) (*Object, Freshness) {
 }
 
 // Set stores obj under key, evicting LRU entries in its shard as needed.
-// Only objects bigger than the entire cache budget are rejected — a large
+// Only objects bigger than the entire cache budget are rejected - a large
 // but legitimate object (a big image, an unresized photo) is admitted even
 // if it alone exceeds its shard's usual fair share of the budget; that
 // shard simply runs over its nominal share until enough of its own entries
@@ -256,7 +256,7 @@ func (c *Cache) Stats() Stats {
 }
 
 // evictOverLocked evicts LRU entries until the shard is back under budget.
-// protect, when non-nil, is never evicted — used right after Set() inserts
+// protect, when non-nil, is never evicted - used right after Set() inserts
 // an object bigger than the shard's fair share: without this, once every
 // other entry in the shard is gone the loop would reach the very entry it
 // just inserted and evict that too, so the object could never actually

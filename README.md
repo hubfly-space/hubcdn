@@ -1,7 +1,7 @@
 # hubCDN
 
 A self-hosted CDN that is configured entirely through DNS. No accounts, no
-dashboard, no API keys for your users — putting a site behind hubCDN takes
+dashboard, no API keys for your users - putting a site behind hubCDN takes
 two DNS records.
 
 ```
@@ -11,23 +11,23 @@ hubcdn.v1.origin.your-domain.com TXT    →  "https://your-actual-server.com"
 
 hubCDN terminates TLS with automatically issued (and renewed) Let's Encrypt
 certificates, caches responses in a memory-adaptive in-process cache, and
-reverse-proxies everything else — including WebSockets — to the origin.
+reverse-proxies everything else - including WebSockets - to the origin.
 
 ## How it works
 
 1. **A user points their domain at your node** (A/AAAA record, or CNAME to
    your node's hostname). When the first HTTPS request arrives, hubCDN
-   issues a certificate on demand — gated by a rate-limit guard so runaway
+   issues a certificate on demand - gated by a rate-limit guard so runaway
    subdomain issuance can never exhaust the CA's weekly limits.
 2. **hubCDN serves a setup page** on their domain explaining the one
    remaining step: publish the origin TXT record.
 3. **The user adds `hubcdn.v1.origin.<domain>`** with the address of their
    real server. hubCDN picks it up within seconds and starts proxying and
    caching. An optional `hubcdn.v1.config.<domain>` record tunes caching,
-   WebSockets and more — see [docs/dns-records.md](docs/dns-records.md).
+   WebSockets and more - see [docs/dns-records.md](docs/dns-records.md).
 
 Origins and configuration are re-resolved periodically, so users change
-settings by editing DNS — never by touching your server.
+settings by editing DNS - never by touching your server.
 
 ## Quick start
 
@@ -41,7 +41,7 @@ HUBCDN_HOSTNAME=cdn.example.net \
 ```
 
 Visiting `https://cdn.example.net` shows the instructions page your users
-follow — hubCDN is TLS-only, so there's no plain-HTTP fallback, not even for
+follow - hubCDN is TLS-only, so there's no plain-HTTP fallback, not even for
 its own landing page; the first HTTPS request issues its certificate
 on-demand just like any customer domain. Use `HUBCDN_ACME_STAGING=true`
 while testing so you never touch production ACME limits.
@@ -58,24 +58,24 @@ Full deployment guide (systemd, Docker, hardening, multi-node, `make deploy`): [
 
 ## Features
 
-- **Automatic TLS** — on-demand issuance on the first request for a domain,
+- **Automatic TLS** - on-demand issuance on the first request for a domain,
   automatic renewal before expiry, and a persistent issuance guard with
   per-domain and node-wide budgets ([docs/ssl.md](docs/ssl.md)).
-- **DNS-only onboarding** — origin and per-domain configuration live in TXT
+- **DNS-only onboarding** - origin and per-domain configuration live in TXT
   records under the versioned `hubcdn.v1.*` namespace
   ([docs/dns-records.md](docs/dns-records.md)).
-- **Adaptive in-memory cache** — sharded 256 ways, byte-accounted, LRU
+- **Adaptive in-memory cache** - sharded 256 ways, byte-accounted, LRU
   eviction, SHA-256 keying, and a watchdog that shrinks the cache when the
   host runs low on memory and grows it back when pressure clears
   ([docs/caching.md](docs/caching.md)).
-- **WebSockets & streaming** — Upgrade requests tunnel straight through;
+- **WebSockets & streaming** - Upgrade requests tunnel straight through;
   SSE and chunked responses stream with periodic flushing.
-- **Image CDN with zero setup** — wrap any public image URL in
+- **Image CDN with zero setup** - wrap any public image URL in
   `/img/<options>/<url>` and get a resized, compressed, edge-cached
   rendition back: resize, fit/crop modes, quality, format conversion,
   grayscale, blur, flips, dpr scaling, metadata stripping. Renditions are
   kept up to 7 days with automatic LRU purging ([docs/images.md](docs/images.md)).
-- **Multi-node routing via Bunny DNS** — each node registers itself in a
+- **Multi-node routing via Bunny DNS** - each node registers itself in a
   Bunny DNS zone on startup and removes itself on shutdown, giving you
   DNS-distributed traffic across a fleet ([docs/self-hosting.md](docs/self-hosting.md#multiple-nodes-with-bunny-dns)).
 
@@ -104,4 +104,4 @@ Run `make help` for the full target list, including the Docker and
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).

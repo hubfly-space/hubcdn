@@ -5,7 +5,7 @@ package views
 // instructions, and the Image CDN (direct caching, no DNS) reference with a
 // live URL builder. Switching tabs re-themes the page background.
 templ Landing(hostname string, ips []string) {
-	@layout("hubCDN — self-hosted CDN", false) {
+	@layout("hubCDN - self-hosted CDN", false) {
 		<input class="tab-input" type="radio" name="mode" id="tab-site" checked/>
 		<input class="tab-input" type="radio" name="mode" id="tab-img"/>
 		<div class="tabs">
@@ -72,11 +72,11 @@ templ sitePane(hostname string, ips []string) {
 }
 
 templ imagePane(hostname string, ips []string) {
-	<div class="badge">direct caching — no DNS needed</div>
+	<div class="badge">direct caching - no DNS needed</div>
 	<h1>Optimize any image through <span>hubCDN</span></h1>
 	<p class="lead">
 		Wrap any public image URL and get back a compressed, resized,
-		edge-cached copy. No DNS changes, no signup — just a URL.
+		edge-cached copy. No DNS changes, no signup - just a URL.
 	</p>
 	<h2>URL format</h2>
 	<pre class="record">/img/<b>&lt;options&gt;</b>/<b>&lt;image-url&gt;</b></pre>
@@ -153,13 +153,13 @@ templ imagePane(hostname string, ips []string) {
 		<tr><td><code>gray</code></td><td><code>on</code></td><td>Grayscale</td></tr>
 		<tr><td><code>blur</code></td><td>1–50</td><td>Blur radius</td></tr>
 		<tr><td><code>flip</code></td><td><code>h</code> · <code>v</code> · <code>hv</code></td><td>Mirror horizontally / vertically</td></tr>
-		<tr><td><code>_</code></td><td>—</td><td>No options: just compress &amp; strip metadata</td></tr>
+		<tr><td><code>_</code></td><td>-</td><td>No options: just compress &amp; strip metadata</td></tr>
 	</table>
 	<div class="notice">
 		<strong>Retention:</strong> optimized images stay cached for up to
 		7&nbsp;days. When the node fills up, the least-recently-used images
 		are purged automatically and simply re-optimized on their next
-		request — so hotlinking these URLs is always safe. Animated GIFs are
+		request - so hotlinking these URLs is always safe. Animated GIFs are
 		passed through untouched.
 	</div>
 	@imageExample(hostname, ips)
@@ -205,10 +205,10 @@ templ imageExample(hostname string, ips []string) {
 		</table>
 		<p class="muted">
 			That preview above is this exact photo, live, resized with
-			<code>w=600</code> — <strong>99% smaller (110x)</strong>. Even with
+			<code>w=600</code> - <strong>99% smaller (110x)</strong>. Even with
 			zero options at all (<code>/img/_/&lt;url&gt;</code>), just the
 			default 2048px cap and re-encode alone takes it from 3.7&nbsp;MB
-			down to <strong>247&nbsp;KB</strong> — a 93% reduction — with no
+			down to <strong>247&nbsp;KB</strong> - a 93% reduction - with no
 			configuration whatsoever.
 		</p>
 		<p class="muted">
@@ -216,7 +216,7 @@ templ imageExample(hostname string, ips []string) {
 			source (a few seconds, since this source is large); every request
 			after that is served instantly from cache.
 		</p>
-		<p class="muted">Test it yourself — open either link directly:</p>
+		<p class="muted">Test it yourself - open either link directly:</p>
 		<pre class="record">Original:  <a href={ templ.URL(exampleImageURL) } target="_blank" rel="noopener">{ exampleImageURL }</a></pre>
 		<pre class="record">Optimized: <a href={ templ.URL(exampleOptimizedURL(hostname, ips)) } target="_blank" rel="noopener">{ exampleOptimizedURL(hostname, ips) }</a></pre>
 	</div>
@@ -233,7 +233,7 @@ templ resultsSection() {
 		</table>
 		<p class="muted">
 			<b>dummy-web.uhost.pro</b> is <strong>~48% faster</strong> in time to
-			first byte than the origin — served from hubCDN's edge cache instead
+			first byte than the origin - served from hubCDN's edge cache instead
 			of round-tripping across continents on every request.
 		</p>
 	</div>

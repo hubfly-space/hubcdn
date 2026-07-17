@@ -2,7 +2,7 @@
 //
 //	https://<node>/img/<options>/<source-image-url>
 //
-// No DNS setup is involved — any public image URL can be wrapped and the
+// No DNS setup is involved - any public image URL can be wrapped and the
 // node fetches, transforms (internal/imageproc) and caches the result.
 // Optimized images live in the shared in-memory cache with a 7-day TTL;
 // under memory pressure the LRU eviction and cache watchdog purge the
@@ -70,7 +70,7 @@ type Handler struct {
 }
 
 // New builds the handler. client may be nil, in which case an SSRF-guarded
-// client (public IPs only) is used — pass a custom client only in tests.
+// client (public IPs only) is used - pass a custom client only in tests.
 func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *http.Client) *Handler {
 	guarded := client == nil
 	if client == nil {
@@ -186,7 +186,7 @@ func (h *Handler) fetch(ctx context.Context, src *url.URL) ([]byte, error) {
 	// Explicit pre-flight check, in addition to the equivalent check inside
 	// newSafeClient's DialContext: that one guards every connection this
 	// client ever makes (including redirect hops, resolved fresh each
-	// time), which is what actually closes off DNS-rebinding — a hostname
+	// time), which is what actually closes off DNS-rebinding - a hostname
 	// that resolves to a public IP right now could resolve to a private
 	// one by the time the connection opens. This check here rejects the
 	// common case immediately, before ever constructing a request for it.
@@ -324,7 +324,7 @@ func newSafeClient(selfHost func(string) bool) *http.Client {
 
 // requirePublicHost resolves host and rejects it unless every address it
 // resolves to is publicly routable. Used as an explicit gate right before
-// the source fetch, on top of the equivalent (and authoritative — see
+// the source fetch, on top of the equivalent (and authoritative - see
 // newSafeClient) check performed again at actual connection time.
 func requirePublicHost(ctx context.Context, host string) error {
 	_, err := resolvePublicIPs(ctx, host)
@@ -332,7 +332,7 @@ func requirePublicHost(ctx context.Context, host string) error {
 }
 
 // resolvePublicIPs resolves host and returns its addresses, failing if any
-// of them is not a publicly routable unicast address — loopback, RFC 1918,
+// of them is not a publicly routable unicast address - loopback, RFC 1918,
 // link-local (including the cloud metadata address), CGNAT and multicast
 // ranges are all refused.
 func resolvePublicIPs(ctx context.Context, host string) ([]net.IP, error) {
