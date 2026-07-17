@@ -383,10 +383,6 @@ func configReference() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var15 == nil {
-			templ_7745c5c3_Var15 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
 		if templ_7745c5c3_Err != nil {
