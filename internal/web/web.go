@@ -3,6 +3,7 @@ package web
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 
@@ -18,29 +19,35 @@ func RenderLanding(w http.ResponseWriter, hostname string, ips []net.IP) {
 		strs[i] = ip.String()
 	}
 	writeHTML(w, http.StatusOK)
-	_ = views.Landing(hostname, strs).Render(context.Background(), w)
+	if err := views.Landing(hostname, strs).Render(context.Background(), w); err != nil {
+		slog.Error("failed to render landing page", "error", err)
+	}
 }
 
 // RenderSetup writes the "add your origin TXT record" page for a pending
 // domain.
 func RenderSetup(w http.ResponseWriter, snap domain.Snapshot) {
 	writeHTML(w, http.StatusOK)
-	_ = views.Setup(
+	if err := views.Setup(
 		snap.Host,
 		dnsx.OriginRecordPrefix+snap.Host,
 		dnsx.ConfigRecordPrefix+snap.Host,
-	).Render(context.Background(), w)
+	).Render(context.Background(), w); err != nil {
+		slog.Error("failed to render setup page", "host", snap.Host, "error", err)
+	}
 }
 
 // RenderSetupError writes the page shown when a domain's DNS configuration
 // keeps failing to resolve.
 func RenderSetupError(w http.ResponseWriter, snap domain.Snapshot) {
 	writeHTML(w, http.StatusServiceUnavailable)
-	_ = views.SetupError(
+	if err := views.SetupError(
 		snap.Host,
 		dnsx.OriginRecordPrefix+snap.Host,
 		snap.LastError,
-	).Render(context.Background(), w)
+	).Render(context.Background(), w); err != nil {
+		slog.Error("failed to render setup error page", "host", snap.Host, "error", err)
+	}
 }
 
 func writeHTML(w http.ResponseWriter, status int) {
