@@ -7,6 +7,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"strconv"
@@ -93,10 +94,10 @@ func Load() (*Config, error) {
 		Resolver:               envStr("HUBCDN_RESOLVER", ""),
 		RefreshInterval:        envDuration("HUBCDN_REFRESH_INTERVAL", 5*time.Minute),
 		PendingRefreshInterval: envDuration("HUBCDN_PENDING_REFRESH_INTERVAL", 30*time.Second),
-		CertsPerApexPerDay:     envInt("HUBCDN_CERTS_PER_APEX_PER_DAY", 10),
-		CertsPerApexPerWeek:    envInt("HUBCDN_CERTS_PER_APEX_PER_WEEK", 30),
-		CertsGlobalPerHour:     envInt("HUBCDN_CERTS_GLOBAL_PER_HOUR", 60),
-		CertsGlobalPerWeek:     envInt("HUBCDN_CERTS_GLOBAL_PER_WEEK", 1000),
+		CertsPerApexPerDay:     envNonNegInt("HUBCDN_CERTS_PER_APEX_PER_DAY", 10),
+		CertsPerApexPerWeek:    envNonNegInt("HUBCDN_CERTS_PER_APEX_PER_WEEK", 30),
+		CertsGlobalPerHour:     envNonNegInt("HUBCDN_CERTS_GLOBAL_PER_HOUR", 60),
+		CertsGlobalPerWeek:     envNonNegInt("HUBCDN_CERTS_GLOBAL_PER_WEEK", 1000),
 		CacheMaxBytes:          envBytes("HUBCDN_CACHE_MAX_BYTES", 0),
 		CacheMaxObjectBytes:    envBytes("HUBCDN_CACHE_MAX_OBJECT_BYTES", 32<<20),
 		CacheMemHeadroomBytes:  envBytes("HUBCDN_CACHE_MEM_HEADROOM_BYTES", 256<<20),
@@ -138,7 +139,21 @@ func envInt(key string, def int) int {
 	}
 	n, err := strconv.Atoi(v)
 	if err != nil {
+		slog.Warn("invalid environment variable, using default",
+			"key", key, "value", v, "default", def, "error", err)
 		return def
+	}
+	return n
+}
+
+// envNonNegInt is like envInt but clamps negative values to 0 (with a warning)
+// so a typo like -5 cannot silently disable rate limiting.
+func envNonNegInt(key string, def int) int {
+	n := envInt(key, def)
+	if n < 0 {
+		slog.Warn("negative environment variable clamped to 0",
+			"key", key, "value", n)
+		return 0
 	}
 	return n
 }
@@ -150,6 +165,8 @@ func envBool(key string, def bool) bool {
 	}
 	b, err := strconv.ParseBool(v)
 	if err != nil {
+		slog.Warn("invalid environment variable, using default",
+			"key", key, "value", v, "default", def, "error", err)
 		return def
 	}
 	return b
@@ -162,6 +179,8 @@ func envDuration(key string, def time.Duration) time.Duration {
 	}
 	d, err := time.ParseDuration(v)
 	if err != nil {
+		slog.Warn("invalid environment variable, using default",
+			"key", key, "value", v, "default", def, "error", err)
 		return def
 	}
 	return d
@@ -184,6 +203,8 @@ func envBytes(key string, def int64) int64 {
 	}
 	n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
 	if err != nil {
+		slog.Warn("invalid environment variable, using default",
+			"key", key, "value", v, "default", def, "error", err)
 		return def
 	}
 	return n * mult
