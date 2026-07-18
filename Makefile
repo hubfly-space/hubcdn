@@ -5,7 +5,8 @@ BINARY     := hubcdn
 IMAGE      := hubcdn:latest
 COMPOSE    := docker compose
 
-DEPLOY_HOST ?= dev@192.168.1.3
+DEPLOY_HOST ?=
+# Override with your target: make deploy DEPLOY_HOST=user@your-server
 # Relative to the remote user's home directory. Deliberately not "~/hubcdn":
 # bash tilde-expands VAR=value assignments locally using *your* $HOME before
 # the value ever reaches ssh, not the remote user's. A bare relative path
@@ -90,7 +91,10 @@ ps: ## Show stack status
 ## --- Deployment ---
 
 .PHONY: deploy
-deploy: ## Deploy to the production server (dev@192.168.1.3 by default)
+deploy: ## Deploy to the production server (requires DEPLOY_HOST)
+ifndef DEPLOY_HOST
+	$(error DEPLOY_HOST is not set. Usage: make deploy DEPLOY_HOST=user@your-server)
+endif
 	@DEPLOY_HOST=$(DEPLOY_HOST) DEPLOY_DIR=$(DEPLOY_DIR) ./scripts/deploy.sh
 
 .PHONY: remote-logs
