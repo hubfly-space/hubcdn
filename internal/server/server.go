@@ -31,6 +31,7 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/dnsx"
 	"github.com/hubfly-space/hubcdn/internal/domain"
 	"github.com/hubfly-space/hubcdn/internal/imgcdn"
+	"github.com/hubfly-space/hubcdn/internal/metrics"
 	"github.com/hubfly-space/hubcdn/internal/proxy"
 	"github.com/hubfly-space/hubcdn/internal/web"
 	"github.com/hubfly-space/hubcdn/internal/web/static"
@@ -47,6 +48,7 @@ type Server struct {
 	proxy    *proxy.Proxy
 	images   *imgcdn.Handler
 	magic    *certmagic.Config
+	metrics  *metrics.Metrics
 	started  time.Time
 }
 
@@ -84,6 +86,8 @@ func New(cfg *config.Config, log *slog.Logger) (*Server, error) {
 	objCache := cache.New(budget)
 	log.Info("cache initialized", "budget_mb", budget>>20)
 
+	m := &metrics.Metrics{}
+
 	s := &Server{
 		cfg:      cfg,
 		log:      log,
@@ -91,10 +95,11 @@ func New(cfg *config.Config, log *slog.Logger) (*Server, error) {
 		registry: registry,
 		guard:    guard,
 		cache:    objCache,
-		proxy:    proxy.New(objCache, log),
+		proxy:    proxy.New(objCache, log, m),
+		metrics:  m,
 		started:  time.Now(),
 	}
-	s.images = imgcdn.New(objCache, log, s.isSelfHost, nil)
+	s.images = imgcdn.New(objCache, log, s.isSelfHost, nil, m)
 	if err := s.setupTLS(); err != nil {
 		return nil, err
 	}
@@ -279,6 +284,7 @@ func (s *Server) Run(ctx context.Context) error {
 // route dispatches an HTTPS request: node pages for the node's own
 // hostname, setup or proxy for customer domains.
 func (s *Server) route(w http.ResponseWriter, r *http.Request) {
+	s.metrics.TotalRequests.Add(1)
 	host := hostOnly(r.Host)
 
 	if host == "" || host == s.cfg.Hostname || !dnsx.ValidHost(host) {
@@ -354,6 +360,7 @@ func serveAsset(w http.ResponseWriter, r *http.Request, contentType string, data
 
 func (s *Server) serveStats(w http.ResponseWriter) {
 	stats := s.cache.Stats()
+	m := s.metrics.Snap()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"uptime_seconds": int64(time.Since(s.started).Seconds()),
@@ -365,6 +372,19 @@ func (s *Server) serveStats(w http.ResponseWriter) {
 			"hits":      stats.Hits,
 			"misses":    stats.Misses,
 			"evictions": stats.Evictions,
+		},
+		"metrics": map[string]any{
+			"total_requests":     m.TotalRequests,
+			"proxy_requests":     m.ProxyRequests,
+			"cache_hits":         m.CacheHits,
+			"cache_stales":       m.CacheStales,
+			"cache_misses":       m.CacheMisses,
+			"cache_bypass":       m.CacheBypass,
+			"websocket_upgrades": m.WebSocketUpgrades,
+			"not_modified":       m.NotModified,
+			"image_requests":     m.ImageRequests,
+			"image_cache_hits":   m.ImageCacheHits,
+			"image_cache_misses": m.ImageCacheMisses,
 		},
 	})
 }

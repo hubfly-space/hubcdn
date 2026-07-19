@@ -13,6 +13,7 @@ import (
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
 	"github.com/hubfly-space/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/metrics"
 )
 
 func testSnapshot(t *testing.T, origin string, settings domain.Settings) domain.Snapshot {
@@ -31,7 +32,7 @@ func testSnapshot(t *testing.T, origin string, settings domain.Settings) domain.
 }
 
 func testProxy() *Proxy {
-	return New(cache.New(64<<20), slog.New(slog.DiscardHandler))
+	return New(cache.New(64<<20), slog.New(slog.DiscardHandler), &metrics.Metrics{})
 }
 
 func TestStaleWhileRevalidate(t *testing.T) {
@@ -44,7 +45,7 @@ func TestStaleWhileRevalidate(t *testing.T) {
 	defer origin.Close()
 
 	c := cache.New(64 << 20)
-	p := New(c, slog.New(slog.DiscardHandler))
+	p := New(c, slog.New(slog.DiscardHandler), &metrics.Metrics{})
 	snap := testSnapshot(t, origin.URL, domain.DefaultSettings(32<<20))
 
 	do := func() *httptest.ResponseRecorder {

@@ -65,6 +65,10 @@ func Landing(hostname string, ips []string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = metricsDashboard().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = layout("hubCDN - self-hosted CDN", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
@@ -108,7 +112,7 @@ func sitePane(hostname string, ips []string) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hostname)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 33, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 34, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -147,7 +151,7 @@ func sitePane(hostname string, ips []string) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(ip)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 45, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 46, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -160,7 +164,7 @@ func sitePane(hostname string, ips []string) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("\n")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 46, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 47, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -272,7 +276,7 @@ func imageExample(hostname string, ips []string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(exampleOptimizedPath)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 197, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 198, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -285,7 +289,7 @@ func imageExample(hostname string, ips []string) templ.Component {
 		var templ_7745c5c3_Var10 templ.SafeURL
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(exampleImageURL))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 221, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 222, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -298,7 +302,7 @@ func imageExample(hostname string, ips []string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(exampleImageURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 221, Col: 120}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 222, Col: 120}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -311,7 +315,7 @@ func imageExample(hostname string, ips []string) templ.Component {
 		var templ_7745c5c3_Var12 templ.SafeURL
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(exampleOptimizedURL(hostname, ips)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 222, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 223, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -324,7 +328,7 @@ func imageExample(hostname string, ips []string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(exampleOptimizedURL(hostname, ips))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 222, Col: 158}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/web/views/landing.templ`, Line: 223, Col: 158}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -389,6 +393,35 @@ func configReference() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<table><tr><th>Key</th><th>Values</th><th>Default</th></tr><tr><td><code>cache</code></td><td><code>off</code> · <code>standard</code> · <code>aggressive</code></td><td><code>standard</code></td></tr><tr><td><code>ttl</code></td><td>duration (<code>90s</code>, <code>6h</code>) or seconds</td><td><code>1h</code></td></tr><tr><td><code>swr</code></td><td>serve-stale window · <code>0</code> = off</td><td><code>10m</code></td></tr><tr><td><code>websocket</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>preserve_host</code></td><td><code>on</code> · <code>off</code></td><td><code>on</code></td></tr><tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr></table><p class=\"muted\">Changes are picked up automatically on the next refresh cycle.</p>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func metricsDashboard() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"dash\" id=\"metrics-dash\"><div class=\"dash-head\"><div class=\"dash-title\">Live Metrics</div><div class=\"dash-status\" id=\"m-status\"><span class=\"dash-dot\"></span> connecting...</div></div><div class=\"dash-grid\"><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-total\">-</div><div class=\"dash-lbl\">Total Requests</div></div><div class=\"dash-card accent\"><div class=\"dash-val\" id=\"m-hits\">-</div><div class=\"dash-lbl\">Cache Hits</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-stales\">-</div><div class=\"dash-lbl\">Stale Served</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-misses\">-</div><div class=\"dash-lbl\">Cache Misses</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-bypass\">-</div><div class=\"dash-lbl\">Bypass</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-304\">-</div><div class=\"dash-lbl\">Not Modified</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-ws\">-</div><div class=\"dash-lbl\">WebSocket</div></div><div class=\"dash-divider\"></div><div class=\"dash-card accent\"><div class=\"dash-val\" id=\"m-img-total\">-</div><div class=\"dash-lbl\">Image Requests</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-img-hits\">-</div><div class=\"dash-lbl\">Image Hits</div></div><div class=\"dash-card\"><div class=\"dash-val\" id=\"m-img-misses\">-</div><div class=\"dash-lbl\">Image Misses</div></div><div class=\"dash-divider\"></div><div class=\"dash-card wide\"><div class=\"dash-val\" id=\"m-entries\">-</div><div class=\"dash-lbl\">Cached Objects</div></div><div class=\"dash-card wide\"><div class=\"dash-val\" id=\"m-bytes\">-</div><div class=\"dash-lbl\">Cache Usage</div></div><div class=\"dash-card wide\"><div class=\"dash-val\" id=\"m-uptime\">-</div><div class=\"dash-lbl\">Uptime</div></div><div class=\"dash-card wide\"><div class=\"dash-val\" id=\"m-domains\">-</div><div class=\"dash-lbl\">Active Domains</div></div></div></div><script>\n\t\t(function () {\n\t\t\tvar prev = {};\n\t\t\tvar els = {};\n\t\t\tvar ids = [\n\t\t\t\t['total','m-total'],['proxy_requests','m-total'],\n\t\t\t\t['cache_hits','m-hits'],['cache_stales','m-stales'],\n\t\t\t\t['cache_misses','m-misses'],['cache_bypass','m-bypass'],\n\t\t\t\t['not_modified','m-304'],['websocket_upgrades','m-ws'],\n\t\t\t\t['image_requests','m-img-total'],\n\t\t\t\t['image_cache_hits','m-img-hits'],\n\t\t\t\t['image_cache_misses','m-img-misses']\n\t\t\t];\n\t\t\tfunction fmt(n) {\n\t\t\t\tif (n >= 1e9) return (n/1e9).toFixed(1)+'B';\n\t\t\t\tif (n >= 1e6) return (n/1e6).toFixed(1)+'M';\n\t\t\t\tif (n >= 1e4) return (n/1e3).toFixed(1)+'K';\n\t\t\t\treturn n.toLocaleString();\n\t\t\t}\n\t\t\tfunction fmtBytes(b) {\n\t\t\t\tif (b >= 1073741824) return (b/1073741824).toFixed(1)+' GB';\n\t\t\t\tif (b >= 1048576) return (b/1048576).toFixed(1)+' MB';\n\t\t\t\tif (b >= 1024) return (b/1024).toFixed(1)+' KB';\n\t\t\t\treturn b+' B';\n\t\t\t}\n\t\t\tfunction fmtUptime(s) {\n\t\t\t\tvar d=Math.floor(s/86400), h=Math.floor((s%86400)/3600),\n\t\t\t\t    m=Math.floor((s%3600)/60);\n\t\t\t\tif (d>0) return d+'d '+h+'h';\n\t\t\t\tif (h>0) return h+'h '+m+'m';\n\t\t\t\treturn m+'m';\n\t\t\t}\n\t\t\tfunction set(id, val) {\n\t\t\t\tvar el = document.getElementById(id);\n\t\t\t\tif (el && el.textContent !== val) el.textContent = val;\n\t\t\t}\n\t\t\tfunction tick() {\n\t\t\t\tfetch('/hubcdn/stats').then(function(r){return r.json()}).then(function(d){\n\t\t\t\t\tvar m = d.metrics || {};\n\t\t\t\t\tvar c = d.cache || {};\n\t\t\t\t\tset('m-total', fmt(m.total_requests||0));\n\t\t\t\t\tset('m-hits', fmt(m.cache_hits||0));\n\t\t\t\t\tset('m-stales', fmt(m.cache_stales||0));\n\t\t\t\t\tset('m-misses', fmt(m.cache_misses||0));\n\t\t\t\t\tset('m-bypass', fmt(m.cache_bypass||0));\n\t\t\t\t\tset('m-304', fmt(m.not_modified||0));\n\t\t\t\t\tset('m-ws', fmt(m.websocket_upgrades||0));\n\t\t\t\t\tset('m-img-total', fmt(m.image_requests||0));\n\t\t\t\t\tset('m-img-hits', fmt(m.image_cache_hits||0));\n\t\t\t\t\tset('m-img-misses', fmt(m.image_cache_misses||0));\n\t\t\t\t\tset('m-entries', fmt(c.entries||0));\n\t\t\t\t\tset('m-bytes', fmtBytes(c.bytes||0)+' / '+fmtBytes(c.budget||0));\n\t\t\t\t\tset('m-uptime', fmtUptime(d.uptime_seconds||0));\n\t\t\t\t\tset('m-domains', d.domains||0);\n\t\t\t\t\tvar st = document.getElementById('m-status');\n\t\t\t\t\tif (st) st.innerHTML = '<span class=\"dash-dot live\"></span> live';\n\t\t\t\t}).catch(function(){\n\t\t\t\t\tvar st = document.getElementById('m-status');\n\t\t\t\t\tif (st) st.innerHTML = '<span class=\"dash-dot\"></span> offline';\n\t\t\t\t});\n\t\t\t}\n\t\t\ttick();\n\t\t\tsetInterval(tick, 5000);\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

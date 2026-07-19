@@ -18,6 +18,7 @@ templ Landing(hostname string, ips []string) {
 		<section class="pane pane-img">
 			@imagePane(hostname, ips)
 		</section>
+		@metricsDashboard()
 	}
 }
 
@@ -251,4 +252,141 @@ templ configReference() {
 		<tr><td><code>max_object</code></td><td>size (<code>16mb</code>)</td><td>node limit</td></tr>
 	</table>
 	<p class="muted">Changes are picked up automatically on the next refresh cycle.</p>
+}
+
+templ metricsDashboard() {
+	<div class="dash" id="metrics-dash">
+		<div class="dash-head">
+			<div class="dash-title">Live Metrics</div>
+			<div class="dash-status" id="m-status">
+				<span class="dash-dot"></span>
+				connecting...
+			</div>
+		</div>
+		<div class="dash-grid">
+			<div class="dash-card">
+				<div class="dash-val" id="m-total">-</div>
+				<div class="dash-lbl">Total Requests</div>
+			</div>
+			<div class="dash-card accent">
+				<div class="dash-val" id="m-hits">-</div>
+				<div class="dash-lbl">Cache Hits</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-stales">-</div>
+				<div class="dash-lbl">Stale Served</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-misses">-</div>
+				<div class="dash-lbl">Cache Misses</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-bypass">-</div>
+				<div class="dash-lbl">Bypass</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-304">-</div>
+				<div class="dash-lbl">Not Modified</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-ws">-</div>
+				<div class="dash-lbl">WebSocket</div>
+			</div>
+			<div class="dash-divider"></div>
+			<div class="dash-card accent">
+				<div class="dash-val" id="m-img-total">-</div>
+				<div class="dash-lbl">Image Requests</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-img-hits">-</div>
+				<div class="dash-lbl">Image Hits</div>
+			</div>
+			<div class="dash-card">
+				<div class="dash-val" id="m-img-misses">-</div>
+				<div class="dash-lbl">Image Misses</div>
+			</div>
+			<div class="dash-divider"></div>
+			<div class="dash-card wide">
+				<div class="dash-val" id="m-entries">-</div>
+				<div class="dash-lbl">Cached Objects</div>
+			</div>
+			<div class="dash-card wide">
+				<div class="dash-val" id="m-bytes">-</div>
+				<div class="dash-lbl">Cache Usage</div>
+			</div>
+			<div class="dash-card wide">
+				<div class="dash-val" id="m-uptime">-</div>
+				<div class="dash-lbl">Uptime</div>
+			</div>
+			<div class="dash-card wide">
+				<div class="dash-val" id="m-domains">-</div>
+				<div class="dash-lbl">Active Domains</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		(function () {
+			var prev = {};
+			var els = {};
+			var ids = [
+				['total','m-total'],['proxy_requests','m-total'],
+				['cache_hits','m-hits'],['cache_stales','m-stales'],
+				['cache_misses','m-misses'],['cache_bypass','m-bypass'],
+				['not_modified','m-304'],['websocket_upgrades','m-ws'],
+				['image_requests','m-img-total'],
+				['image_cache_hits','m-img-hits'],
+				['image_cache_misses','m-img-misses']
+			];
+			function fmt(n) {
+				if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+				if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+				if (n >= 1e4) return (n/1e3).toFixed(1)+'K';
+				return n.toLocaleString();
+			}
+			function fmtBytes(b) {
+				if (b >= 1073741824) return (b/1073741824).toFixed(1)+' GB';
+				if (b >= 1048576) return (b/1048576).toFixed(1)+' MB';
+				if (b >= 1024) return (b/1024).toFixed(1)+' KB';
+				return b+' B';
+			}
+			function fmtUptime(s) {
+				var d=Math.floor(s/86400), h=Math.floor((s%86400)/3600),
+				    m=Math.floor((s%3600)/60);
+				if (d>0) return d+'d '+h+'h';
+				if (h>0) return h+'h '+m+'m';
+				return m+'m';
+			}
+			function set(id, val) {
+				var el = document.getElementById(id);
+				if (el && el.textContent !== val) el.textContent = val;
+			}
+			function tick() {
+				fetch('/hubcdn/stats').then(function(r){return r.json()}).then(function(d){
+					var m = d.metrics || {};
+					var c = d.cache || {};
+					set('m-total', fmt(m.total_requests||0));
+					set('m-hits', fmt(m.cache_hits||0));
+					set('m-stales', fmt(m.cache_stales||0));
+					set('m-misses', fmt(m.cache_misses||0));
+					set('m-bypass', fmt(m.cache_bypass||0));
+					set('m-304', fmt(m.not_modified||0));
+					set('m-ws', fmt(m.websocket_upgrades||0));
+					set('m-img-total', fmt(m.image_requests||0));
+					set('m-img-hits', fmt(m.image_cache_hits||0));
+					set('m-img-misses', fmt(m.image_cache_misses||0));
+					set('m-entries', fmt(c.entries||0));
+					set('m-bytes', fmtBytes(c.bytes||0)+' / '+fmtBytes(c.budget||0));
+					set('m-uptime', fmtUptime(d.uptime_seconds||0));
+					set('m-domains', d.domains||0);
+					var st = document.getElementById('m-status');
+					if (st) st.innerHTML = '<span class="dash-dot live"></span> live';
+				}).catch(function(){
+					var st = document.getElementById('m-status');
+					if (st) st.innerHTML = '<span class="dash-dot"></span> offline';
+				});
+			}
+			tick();
+			setInterval(tick, 5000);
+		})();
+	</script>
 }
