@@ -28,6 +28,7 @@ import (
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
 	"github.com/hubfly-space/hubcdn/internal/imageproc"
+	"github.com/hubfly-space/hubcdn/internal/metrics"
 	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
 
@@ -54,9 +55,10 @@ const (
 
 // Handler implements the /img/ endpoint.
 type Handler struct {
-	cache  *cache.Cache
-	log    *slog.Logger
-	client *http.Client
+	cache   *cache.Cache
+	log     *slog.Logger
+	client  *http.Client
+	metrics *metrics.Metrics
 	// selfHost reports whether a hostname refers to this node, to refuse
 	// recursive /img/ chains through ourselves.
 	selfHost func(host string) bool
@@ -72,7 +74,7 @@ type Handler struct {
 
 // New builds the handler. client may be nil, in which case an SSRF-guarded
 // client (public IPs only) is used - pass a custom client only in tests.
-func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *http.Client) *Handler {
+func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *http.Client, m *metrics.Metrics) *Handler {
 	guarded := client == nil
 	if client == nil {
 		client = newSafeClient(selfHost)
@@ -81,6 +83,7 @@ func New(c *cache.Cache, log *slog.Logger, selfHost func(string) bool, client *h
 		cache:    c,
 		log:      log,
 		client:   client,
+		metrics:  m,
 		selfHost: selfHost,
 		guarded:  guarded,
 		sem:      make(chan struct{}, max(2, runtime.GOMAXPROCS(0))),
@@ -96,6 +99,7 @@ type httpError struct {
 func (e *httpError) Error() string { return e.msg }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.metrics.ImageRequests.Add(1)
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		http.Error(w, "hubCDN images: only GET is supported", http.StatusMethodNotAllowed)
 		return
@@ -118,6 +122,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	key := cache.Key("img.hubcdn.internal", "IMG", optStr+"|"+src.String(), "")
 	if obj, freshness := h.cache.Get(key); freshness == cache.Fresh {
+		h.metrics.ImageCacheHits.Add(1)
 		h.serve(w, r, key, obj, "HIT")
 		return
 	}
@@ -140,6 +145,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "hubCDN images: could not fetch or process the source image", http.StatusBadGateway)
 		return
 	}
+	h.metrics.ImageCacheMisses.Add(1)
 	h.serve(w, r, key, v.(*cache.Object), "MISS")
 }
 

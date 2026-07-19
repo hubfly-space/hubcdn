@@ -24,6 +24,7 @@ import (
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
 	"github.com/hubfly-space/hubcdn/internal/domain"
+	"github.com/hubfly-space/hubcdn/internal/metrics"
 )
 
 type ctxKey int
@@ -32,9 +33,10 @@ const snapKey ctxKey = 0
 
 // Proxy forwards requests for active domains to their origins.
 type Proxy struct {
-	cache *cache.Cache
-	rp    *httputil.ReverseProxy
-	log   *slog.Logger
+	cache   *cache.Cache
+	rp      *httputil.ReverseProxy
+	log     *slog.Logger
+	metrics *metrics.Metrics
 
 	// refreshing tracks cache keys with an in-flight background
 	// revalidation so a burst of stale hits triggers one origin fetch,
@@ -45,7 +47,7 @@ type Proxy struct {
 
 // New builds the shared reverse proxy. One instance serves every domain;
 // the per-request origin travels in the request context.
-func New(c *cache.Cache, log *slog.Logger) *Proxy {
+func New(c *cache.Cache, log *slog.Logger, m *metrics.Metrics) *Proxy {
 	transport := &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   10 * time.Second,
@@ -59,7 +61,7 @@ func New(c *cache.Cache, log *slog.Logger) *Proxy {
 		ExpectContinueTimeout: time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	p := &Proxy{cache: c, log: log, refreshing: make(map[string]struct{})}
+	p := &Proxy{cache: c, log: log, metrics: m, refreshing: make(map[string]struct{})}
 	p.rp = &httputil.ReverseProxy{
 		Transport:     transport,
 		FlushInterval: 100 * time.Millisecond,
@@ -93,17 +95,20 @@ func New(c *cache.Cache, log *slog.Logger) *Proxy {
 
 // ServeHTTP handles one request for an active domain.
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, snap domain.Snapshot) {
+	p.metrics.ProxyRequests.Add(1)
 	if isUpgrade(r) {
 		if !snap.Settings.Websocket {
 			http.Error(w, "hubCDN: websockets disabled for this domain", http.StatusForbidden)
 			return
 		}
+		p.metrics.WebSocketUpgrades.Add(1)
 		p.forward(w, r, snap)
 		return
 	}
 
 	policy := snap.Settings.Policy()
 	if !policy.CacheableRequest(r) {
+		p.metrics.CacheBypass.Add(1)
 		w.Header().Set("X-Hubcdn-Cache", "BYPASS")
 		p.forward(w, r, snap)
 		return
@@ -114,11 +119,13 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, snap domain.Sn
 
 	switch obj, freshness := p.cache.Get(key); freshness {
 	case cache.Fresh:
+		p.metrics.CacheHits.Add(1)
 		p.serveCached(w, r, obj, "HIT")
 		return
 	case cache.Stale:
 		// Serve the expired copy instantly and revalidate in the
 		// background: after warmup, no client ever waits on the origin.
+		p.metrics.CacheStales.Add(1)
 		p.revalidate(key, r, snap, enc)
 		p.serveCached(w, r, obj, "STALE")
 		return
@@ -126,6 +133,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, snap domain.Sn
 
 	// Miss: fetch a consistent encoding variant from the origin and tee
 	// the body into the cache while streaming it to the client.
+	p.metrics.CacheMisses.Add(1)
 	w.Header().Set("X-Hubcdn-Cache", "MISS")
 	r.Header.Set("Accept-Encoding", enc)
 	rec := &recorder{
@@ -206,6 +214,7 @@ func (p *Proxy) serveCached(w http.ResponseWriter, r *http.Request, obj *cache.O
 	h.Set("X-Hubcdn-Cache", status)
 
 	if notModified(r, obj) {
+		p.metrics.NotModified.Add(1)
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/hubfly-space/hubcdn/internal/cache"
+	"github.com/hubfly-space/hubcdn/internal/metrics"
 	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
 
@@ -34,7 +35,7 @@ func pngBytes(t *testing.T, w, h int) []byte {
 // testHandler uses a plain HTTP client so it can reach loopback test
 // servers; production wiring installs the SSRF-guarded client instead.
 func testHandler() *Handler {
-	return New(cache.New(64<<20), slog.New(slog.DiscardHandler), nil, http.DefaultClient)
+	return New(cache.New(64<<20), slog.New(slog.DiscardHandler), nil, http.DefaultClient, &metrics.Metrics{})
 }
 
 func TestOptimizeMissThenHit(t *testing.T) {
@@ -106,7 +107,7 @@ func TestInvalidOptionsRejected(t *testing.T) {
 // test is the evidence that the flagged sink is unreachable with a
 // non-public destination in the production configuration.
 func TestProductionClientRejectsPrivateHosts(t *testing.T) {
-	h := New(cache.New(1<<20), slog.New(slog.DiscardHandler), nil, nil)
+	h := New(cache.New(1<<20), slog.New(slog.DiscardHandler), nil, nil, &metrics.Metrics{})
 	for _, host := range []string{"127.0.0.1", "10.0.0.5", "169.254.169.254", "192.168.1.1"} {
 		r := httptest.NewRequest(http.MethodGet, "https://cdn.example/img/_/http://"+host+"/x.png", nil)
 		w := httptest.NewRecorder()
@@ -122,7 +123,7 @@ func TestProductionClientRejectsPrivateHosts(t *testing.T) {
 
 func TestSelfHostRejected(t *testing.T) {
 	h := New(cache.New(1<<20), slog.New(slog.DiscardHandler),
-		func(host string) bool { return host == "cdn.example" }, http.DefaultClient)
+		func(host string) bool { return host == "cdn.example" }, http.DefaultClient, &metrics.Metrics{})
 	r := httptest.NewRequest(http.MethodGet, "https://cdn.example/img/_/https://cdn.example/img/_/x.png", nil)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
