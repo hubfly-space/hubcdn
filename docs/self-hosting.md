@@ -196,6 +196,10 @@ issued no matter which node handles the first request.
 - `GET https://<node-hostname>/hubcdn/stats` → JSON: uptime, domain count, cache counters.
 - Logs are structured JSON on stderr: certificate issuances and refusals,
   domain state changes, memory-pressure events, origin errors.
+- Optional DevLite observability is enabled with `DEVLITE_API_KEY`. It sends
+  scrubbed request events, errors, slow requests, structured logs, and manual
+  metrics through a bounded asynchronous queue. If DevLite is unavailable,
+  hubCDN continues serving traffic and reports only a local warning.
 - Back up `HUBCDN_DATA_DIR` if you want restarts to preserve certificates
   and issuance history; everything in it can be regenerated, at the cost of
   re-issuing certificates (which consumes ACME quota).
