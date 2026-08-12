@@ -7,6 +7,7 @@ scaling trivial - routing between nodes is plain DNS.
 
 ## Components
 
+
 ```
 cmd/hubcdn            entrypoint: config, signals, Bunny DNS registration
 internal/
