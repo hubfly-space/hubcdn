@@ -33,6 +33,7 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/imgcdn"
 	"github.com/hubfly-space/hubcdn/internal/metrics"
 	"github.com/hubfly-space/hubcdn/internal/proxy"
+	"github.com/hubfly-space/hubcdn/internal/telemetry"
 	"github.com/hubfly-space/hubcdn/internal/web"
 	"github.com/hubfly-space/hubcdn/internal/web/static"
 )
@@ -242,6 +243,15 @@ func (s *Server) onCertEvent(_ context.Context, event string, data map[string]an
 func (s *Server) Run(ctx context.Context) error {
 	go s.registry.Run(ctx)
 	go s.cache.Watchdog(ctx, s.cache.Budget(), s.cfg.CacheMemHeadroomBytes, s.log)
+	telemetry.StartMetrics(ctx, func() {
+		cacheStats := s.cache.Stats()
+		requestStats := s.metrics.Snap()
+		telemetry.ReportMetric("hubcdn.cache.entries", float64(cacheStats.Entries), "count", nil)
+		telemetry.ReportMetric("hubcdn.cache.bytes", float64(cacheStats.Bytes), "byte", nil)
+		telemetry.ReportMetric("hubcdn.cache.hits", float64(requestStats.CacheHits), "count", nil)
+		telemetry.ReportMetric("hubcdn.cache.misses", float64(requestStats.CacheMisses), "count", nil)
+		telemetry.ReportMetric("hubcdn.domains", float64(s.registry.Count()), "count", nil)
+	})
 
 	tlsCfg := s.magic.TLSConfig()
 	tlsCfg.MinVersion = tls.VersionTLS12
@@ -249,7 +259,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	httpsSrv := &http.Server{
 		Addr:              s.cfg.HTTPSAddr,
-		Handler:           http.HandlerFunc(s.route),
+		Handler:           telemetryHandler(http.HandlerFunc(s.route)),
 		TLSConfig:         tlsCfg,
 		ReadHeaderTimeout: 15 * time.Second,
 		IdleTimeout:       2 * time.Minute,
@@ -279,6 +289,10 @@ func (s *Server) Run(ctx context.Context) error {
 	defer cancel()
 	_ = httpsSrv.Shutdown(shutdownCtx)
 	return nil
+}
+
+func telemetryHandler(next http.Handler) http.Handler {
+	return telemetry.Middleware(next)
 }
 
 // route dispatches an HTTPS request: node pages for the node's own
