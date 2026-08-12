@@ -15,6 +15,7 @@ import (
 	"github.com/hubfly-space/hubcdn/internal/bunny"
 	"github.com/hubfly-space/hubcdn/internal/config"
 	"github.com/hubfly-space/hubcdn/internal/server"
+	"github.com/hubfly-space/hubcdn/internal/telemetry"
 )
 
 // version, commit and date are set via -ldflags at release build time (see
@@ -37,6 +38,8 @@ func main() {
 	}
 
 	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	log, closeTelemetry := telemetry.Init(log)
+	defer closeTelemetry()
 
 	cfg, err := config.Load()
 	if err != nil {
