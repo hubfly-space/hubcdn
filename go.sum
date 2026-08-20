@@ -1,7 +1,7 @@
 code.pfad.fr/check v1.1.0 h1:GWvjdzhSEgHvEHe2uJujDcpmZoySKuHQNrZMfzfO0bE=
 code.pfad.fr/check v1.1.0/go.mod h1:NiUH13DtYsb7xp5wll0U4SXx7KhXQVCtRgdC96IPfoM=
-github.com/Ishimwe-Kevin/devlite-go v0.1.0 h1:T3SqVIWoXY8y3c/ivkfNb12wApuv4U2N4ZI5aO6TO7A=
-github.com/Ishimwe-Kevin/devlite-go v0.1.0/go.mod h1:s+7jrtahgStknD1Dbh5H4DElAA8YK7RNqC2UIMfr9tU=
+github.com/Ishimwe-Kevin/devlite-go v0.1.3 h1:S/AXRNOxyI5Bm0Mb7F567ScdfcKiW6AuWJ9UQuQE9wM=
+github.com/Ishimwe-Kevin/devlite-go v0.1.3/go.mod h1:s+7jrtahgStknD1Dbh5H4DElAA8YK7RNqC2UIMfr9tU=
 github.com/a-h/templ v0.3.1020 h1:ypAT/L5ySWEnZ6Zft/5yfoWXYYkhFNvEFOeeqecg4tw=
 github.com/a-h/templ v0.3.1020/go.mod h1:A2DlK61v+K+NRoGnhmYbNYVmtYHcFO5/AisMvBdDxTM=
 github.com/caddyserver/certmagic v0.25.4 h1:8eIXh0HC3MsGnNo8One+BCxMGTbe5zb/oz+2KsxBFQg=
