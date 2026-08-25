@@ -259,7 +259,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	httpsSrv := &http.Server{
 		Addr:              s.cfg.HTTPSAddr,
-		Handler:           telemetryHandler(http.HandlerFunc(s.route)),
+		Handler:           recoveryMiddleware(telemetryHandler(http.HandlerFunc(s.route))),
 		TLSConfig:         tlsCfg,
 		ReadHeaderTimeout: 15 * time.Second,
 		IdleTimeout:       2 * time.Minute,
@@ -289,6 +289,19 @@ func (s *Server) Run(ctx context.Context) error {
 	defer cancel()
 	_ = httpsSrv.Shutdown(shutdownCtx)
 	return nil
+}
+
+
+func recoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				slog.Error("http handler panic recovered", "err", rec, "path", r.URL.Path, "host", r.Host)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 func telemetryHandler(next http.Handler) http.Handler {
