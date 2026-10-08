@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/Ishimwe-Kevin/devlite-go v0.1.5
-	github.com/a-h/templ v0.3.1020
+	github.com/a-h/templ v0.3.1070
 	github.com/caddyserver/certmagic v0.25.4
 	go.uber.org/zap v1.28.0
 	golang.org/x/image v0.46.0
@@ -25,5 +25,5 @@ require (
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 )
